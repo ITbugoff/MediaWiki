@@ -6,8 +6,8 @@ IntraACL patch for MW 1.27.x
 
 REQUIREMENTS
 -----------------------------------
-* IntraACL	2.1.9.1 (tested)
 * MediaWiki 1.27.0 - 1.27.1 (tested)
+* IntraACL	2.1.9.1 (tested)
 * https://github.com/mediawiki4intranet/IntraACL#REQUIREMENTS
 
 INSTALLATION
