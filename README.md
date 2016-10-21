@@ -1,4 +1,4 @@
-MW 1.27.0 - 1.27.1 IntraACL extension patch
+IntraACL patch for MW 1.27.x
 =====================
 * extension official homepage: http://wiki.4intra.net/IntraACL
 * extension official GH repo: https://github.com/mediawiki4intranet/IntraACL
@@ -6,7 +6,7 @@ MW 1.27.0 - 1.27.1 IntraACL extension patch
 
 REQUIREMENTS
 -----------------------------------
-* MediaWiki 1.27.0-1.27.1 (only)
+* MediaWiki 1.27.0 - 1.27.1 (only)
 https://github.com/mediawiki4intranet/IntraACL#REQUIREMENTS
 
 INSTALLATION
