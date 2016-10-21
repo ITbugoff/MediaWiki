@@ -1,4 +1,4 @@
-IntraACL extension for MediaWiki
+MW 1.27.0 - 1.27.1 IntraACL extension patch
 =====================
 * Homepage: http://wiki.4intra.net/IntraACL
 * Official GH repo: https://github.com/mediawiki4intranet/IntraACL
