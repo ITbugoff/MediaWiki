@@ -1,4 +1,5 @@
-= IntraACL extension for MediaWiki
+IntraACL extension for MediaWiki
+***
 * Homepage: http://wiki.4intra.net/IntraACL
 * Official GH repo: https://github.com/mediawiki4intranet/IntraACL
 
