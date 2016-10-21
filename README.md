@@ -1,1 +1,1 @@
-# IntraACL
+# IntraACL extension for MediaWiki
