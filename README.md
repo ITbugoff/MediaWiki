@@ -7,5 +7,6 @@ REQUIREMENTS
 -----------------------------------
 * MediaWiki 1.27.0-1.27.1 (only)
 https://github.com/mediawiki4intranet/IntraACL#REQUIREMENTS
-== INSTALLATION ==
+INSTALLATION
+-----------------------------------
 https://github.com/mediawiki4intranet/IntraACL#INSTALLATION
