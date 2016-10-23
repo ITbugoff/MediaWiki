@@ -1,0 +1,2864 @@
+diff -r -u tmp/extensions/IntraACL/includes/ACLSpecial.php html/extensions/IntraACL/includes/ACLSpecial.php
+--- tmp/extensions/IntraACL/includes/ACLSpecial.php	2016-09-15 21:33:21.000000000 +0300
++++ html/extensions/IntraACL/includes/ACLSpecial.php	2016-09-15 19:09:39.000000000 +0300
+@@ -91,7 +91,7 @@
+         $q = $wgRequest->getValues();
+         if ($wgUser->isLoggedIn())
+         {
+-            $wgOut->setPageTitle(wfMsg('hacl_special_page'));
++            $wgOut->setPageTitle(wfMessage( 'hacl_special_page' )->text());
+             $groups = $wgUser->getGroups();
+             $this->isAdmin = true && array_intersect($groups, $haclgSuperGroups);
+             if (!isset($q['action']) ||
+@@ -109,7 +109,7 @@
+             ));
+             if ($f == 'html_acllist')
+             {
+-                $wgOut->addHTML('<p style="margin-top: -8px">'.wfMsgExt('hacl_acllist_hello', 'parseinline').'</p>');
++                $wgOut->addHTML('<p style="margin-top: -8px">'.wfMessage('hacl_acllist_hello')->parse().'</p>');
+             }
+             $this->_actions($q);
+             $this->$f($q);
+@@ -466,7 +466,7 @@
+         }
+         else
+         {
+-            $wgOut->addWikiText(wfMsg('hacl_acllist_empty'));
++            $wgOut->addWikiText(wfMessage( 'hacl_acllist_empty' )->text());
+         }
+         haclfRestoreTitlePatch($patch);
+     }
+@@ -521,7 +521,7 @@
+         require(dirname(__FILE__).'/../templates/HACL_ACLList.tpl.php');
+         $html = ob_get_contents();
+         ob_end_clean();
+-        $wgOut->setPageTitle(wfMsg('hacl_acllist'));
++        $wgOut->setPageTitle(wfMessage( 'hacl_acllist' )->text());
+         $wgOut->addModules('ext.intraacl.acllist');
+         $wgOut->addHTML($html);
+         $cfg = array();
+@@ -575,7 +575,7 @@
+             $msg = 'hacl_acl_create_title';
+         else
+             $msg = 'hacl_acl_create';
+-        $wgOut->setPageTitle(wfMsg($msg, $aclTitle ? $aclTitle->getText() : ''));
++        $wgOut->setPageTitle(wfMessage( $msg, $aclTitle ? $aclTitle->getText() : '' )->text());
+         $wgOut->addModules('ext.intraacl.acleditor');
+         $wgOut->addHTML($html);
+         $cfg = array(
+@@ -646,7 +646,7 @@
+         require(dirname(__FILE__).'/../templates/HACL_QuickACL.tpl.php');
+         $html = ob_get_contents();
+         ob_end_clean();
+-        $wgOut->setPageTitle(wfMsg('hacl_qacl_manage'));
++        $wgOut->setPageTitle(wfMessage( 'hacl_qacl_manage' )->text());
+         $wgOut->addHTML($html);
+     }
+ 
+@@ -673,7 +673,7 @@
+         }
+         foreach ($actions as $action)
+         {
+-            $a = '<b>'.wfMsg("hacl_action_$action").'</b>';
++            $a = '<b>'.wfMessage( "hacl_action_$action" )->text().'</b>';
+             if ($act != $action)
+             {
+                 $url = "$wgScript?title=Special:IntraACL&action=$action";
+@@ -695,7 +695,7 @@
+         require(dirname(__FILE__).'/../templates/HACL_GroupList.tpl.php');
+         $html = ob_get_contents();
+         ob_end_clean();
+-        $wgOut->setPageTitle(wfMsg('hacl_grouplist'));
++        $wgOut->setPageTitle(wfMessage( 'hacl_grouplist' )->text());
+         $wgOut->addModules('ext.intraacl.grouplist');
+         $wgOut->addHTML($html);
+     }
+@@ -729,7 +729,7 @@
+         $html = ob_get_contents();
+         ob_end_clean();
+         $wgOut->addModules('ext.intraacl.groupeditor');
+-        $wgOut->setPageTitle($grpTitle ? wfMsg('hacl_grp_editing', $grpTitle->getText()) : wfMsg('hacl_grp_creating'));
++        $wgOut->setPageTitle($grpTitle ? wfMessage( 'hacl_grp_editing', $grpTitle->getText() )->text() : wfMessage( 'hacl_grp_creating' )->text());
+         $wgOut->addHTML($html);
+         $cfg = array(
+             'NS_ACL' => $wgContLang->getNsText(HACL_NS_ACL),
+@@ -772,7 +772,7 @@
+                 $d['singletype'] = IACL::$typeToName[$s[0]];
+                 $d['singlename'] = $d['single']->getText();
+                 $d['singlelink'] = $d['single']->getLocalUrl();
+-                $d['singletip'] = wfMsg('hacl_acllist_hint_single', $d['real'], $d['single']->getPrefixedText());
++                $d['singletip'] = wfMessage( 'hacl_acllist_hint_single', $d['real'], $d['single']->getPrefixedText() )->text();
+             }
+             $lists[$d['type']][] = $d;
+         }
+diff -r -u tmp/extensions/IntraACL/includes/ParserFunctions.php html/extensions/IntraACL/includes/ParserFunctions.php
+--- tmp/extensions/IntraACL/includes/ParserFunctions.php	2016-09-15 21:33:21.000000000 +0300
++++ html/extensions/IntraACL/includes/ParserFunctions.php	2016-09-15 20:07:24.000000000 +0300
+@@ -114,7 +114,7 @@
+     {
+         if ($this->peType == IACL::PE_GROUP)
+         {
+-            return wfMsgForContent('hacl_invalid_parser_function', 'access');
++            return wfMessage('hacl_invalid_parser_function', 'access')->inContentLanguage()->text();
+         }
+ 
+         $params = $this->getParameters($args);
+@@ -128,7 +128,7 @@
+         $errMsgs = $em1 + $em2;
+ 
+         // Format the defined right in Wikitext
+-        $text = wfMsgForContent('hacl_pf_rights_title', implode(', ', $actions));
++        $text = wfMessage('hacl_pf_rights_title', implode(', ', $actions))->inContentLanguage()->text();
+         $text .= $this->showAssignees(array_keys($users), array_keys($groups));
+         $text .= $this->showErrors($errMsgs);
+ 
+@@ -150,7 +150,7 @@
+     {
+         if ($this->peType == IACL::PE_GROUP)
+         {
+-            return wfMsgForContent('hacl_invalid_parser_function', 'predefined right');
++            return wfMessage('hacl_invalid_parser_function', 'predefined right')->inContentLanguage()->text();
+         }
+ 
+         $params = $this->getParameters($args);
+@@ -178,7 +178,7 @@
+         }
+ 
+         // Format the rights in Wikitext
+-        $text = wfMsgForContent('hacl_pf_predefined_rights_title');
++        $text = wfMessage('hacl_pf_predefined_rights_title')->inContentLanguage()->text();
+         $text .= $this->showRights(array_keys($rights));
+         $text .= $this->showErrors($errors);
+ 
+@@ -200,7 +200,7 @@
+         list($users, $groups, $errMsgs) = $this->assignedTo($params, 'assigned to', IACL::ACTION_MANAGE);
+ 
+         // Format the right managers in Wikitext
+-        $text = wfMsgForContent('hacl_pf_right_managers_title');
++        $text = wfMessage('hacl_pf_right_managers_title')->inContentLanguage()->text();
+         $text .= $this->showAssignees(array_keys($users), array_keys($groups));
+         $text .= $this->showErrors($errMsgs);
+ 
+@@ -218,7 +218,7 @@
+     {
+         if ($this->peType != IACL::PE_GROUP)
+         {
+-            return wfMsgForContent('hacl_invalid_parser_function', 'predefined right');
++            return wfMessage('hacl_invalid_parser_function', 'predefined right')->inContentLanguage()->text();
+         }
+ 
+         $params = $this->getParameters($args);
+@@ -227,7 +227,7 @@
+         list($users, $groups, $errMsgs) = $this->assignedTo($params, 'members', IACL::ACTION_GROUP_MEMBER);
+ 
+         // Format the group members in Wikitext
+-        $text = wfMsgForContent('hacl_pf_group_members_title');
++        $text = wfMessage('hacl_pf_group_members_title')->inContentLanguage()->text();
+         $text .= $this->showAssignees(array_keys($users), array_keys($groups));
+         $text .= $this->showErrors($errMsgs);
+ 
+@@ -276,7 +276,7 @@
+         if (!isset($params[$param]))
+         {
+             // The parameter is missing
+-            $errors[] = wfMsgForContent('hacl_missing_parameter', $param);
++            $errors[] = wfMessage('hacl_missing_parameter', $param)->inContentLanguage()->text();
+             return array($users, $groups, $errors);
+         }
+ 
+@@ -317,7 +317,7 @@
+             }
+             else
+             {
+-                $errors[] = wfMsgForContent('hacl_unknown_user', $assignee);
++                $errors[] = wfMessage('hacl_unknown_user', $assignee)->inContentLanguage()->text();
+             }
+         }
+         // Get user IDs in a single pass
+@@ -332,7 +332,7 @@
+             }
+             foreach ($check as $invalid => $true)
+             {
+-                $errors[] = wfMsgForContent('hacl_unknown_user', $invalid);
++                $errors[] = wfMessage('hacl_unknown_user', $invalid)->inContentLanguage()->text();
+                 $this->badLinks[] = Title::makeTitleSafe(NS_USER, $invalid);
+             }
+         }
+@@ -349,14 +349,14 @@
+             }
+             foreach ($check as $invalid => $true)
+             {
+-                $errors[] = wfMsgForContent('hacl_unknown_group', $invalid);
++                $errors[] = wfMessage('hacl_unknown_group', $invalid)->inContentLanguage()->text();
+                 $this->badLinks[] = Title::makeTitleSafe(HACL_NS_ACL, $invalid);
+             }
+         }
+         if (!$users && !$groups && !$all_reg)
+         {
+             // No users/groups specified at all => add error message
+-            $errors[] = wfMsgForContent('hacl_missing_parameter_values', $param);
++            $errors[] = wfMessage('hacl_missing_parameter_values', $param)->inContentLanguage()->text();
+         }
+         else
+         {
+@@ -426,7 +426,7 @@
+         if (!isset($params[$param]))
+         {
+             // The parameter "actions" is missing.
+-            $errMsgs[] = wfMsgForContent('hacl_missing_parameter', $param);
++            $errMsgs[] = wfMessage('hacl_missing_parameter', $param)->inContentLanguage()->text();
+             return array($bitmask, $actions, $errMsgs);
+         }
+ 
+@@ -438,7 +438,7 @@
+             $id = $haclgContLang->getActionId($actions[$i]);
+             if (!$id)
+             {
+-                $errMsgs[] = wfMsgForContent('hacl_invalid_action', $actions[$i]);
++                $errMsgs[] = wfMessage('hacl_invalid_action', $actions[$i])->inContentLanguage()->text();
+             }
+             else
+             {
+@@ -447,7 +447,7 @@
+         }
+         if (!$actions)
+         {
+-            $errMsgs[] = wfMsgForContent('hacl_missing_parameter_values', $param);
++            $errMsgs[] = wfMessage('hacl_missing_parameter_values', $param)->inContentLanguage()->text();
+         }
+ 
+         return array($bitmask, $actions, $errMsgs);
+@@ -469,7 +469,7 @@
+         if (!isset($params[$param]))
+         {
+             // The parameter "rights" is missing
+-            $errMsgs[] = wfMsgForContent('hacl_missing_parameter', $param);
++            $errMsgs[] = wfMessage('hacl_missing_parameter', $param)->inContentLanguage()->text();
+             return array($rights, $errMsgs);
+         }
+ 
+@@ -488,18 +488,18 @@
+                     if ($result[$r][2] === NULL || !$subt->exists())
+                     {
+                         $this->badLinks[] = $subt;
+-                        $errMsgs[] = wfMsgForContent('hacl_invalid_predefined_right', $subt);
++                        $errMsgs[] = wfMessage('hacl_invalid_predefined_right', $subt)->inContentLanguage()->text();
+                     }
+                 }
+                 else
+                 {
+-                    $errMsgs[] = wfMsgForContent('hacl_invalid_predefined_right', $r);
++                    $errMsgs[] = wfMessage('hacl_invalid_predefined_right', $r)->inContentLanguage()->text();
+                 }
+             }
+         }
+         if (!$result)
+         {
+-            $errMsgs[] = wfMsgForContent('hacl_missing_parameter_values', $param);
++            $errMsgs[] = wfMessage('hacl_missing_parameter_values', $param)->inContentLanguage()->text();
+         }
+ 
+         return array($result, $errMsgs);
+@@ -536,29 +536,29 @@
+                 {
+                     $editor = false;
+                     $html .= '<div class="error"><p>'.
+-                        wfMsgForContent('hacl_non_canonical_acl_new', Title::newFromText($sdName)->getLocalUrl(), $sdName, $old).'</p></div>';
++                        wfMessage('hacl_non_canonical_acl_new', Title::newFromText($sdName)->getLocalUrl(), $sdName, $old)->inContentLanguage()->text().'</p></div>';
+                 }
+                 else
+                 {
+                     $html .= '<div class="error"><p>'.
+-                        wfMsgForContent('hacl_non_canonical_acl', SpecialPage::getTitleFor('MovePage', $old)
+-                        ->getLocalUrl(array('wpLeaveRedirect' => 0, 'wpNewTitle' => $sdName)), $sdName, $old).'</p></div>';
++                        wfMessage('hacl_non_canonical_acl', SpecialPage::getTitleFor('MovePage', $old)
++                        ->getLocalUrl(array('wpLeaveRedirect' => 0, 'wpNewTitle' => $sdName)), $sdName, $old)->inContentLanguage()->text().'</p></div>';
+                 }
+             }
+             // Add "Create/edit with IntraACL editor" link
+             if ($editor && $article->getTitle()->userCan('edit'))
+             {
+-                $html .= wfMsgForContent($self->def && $self->def->clean() ? 'hacl_edit_with_special' : 'hacl_create_with_special',
++                $html .= wfMessage($self->def && $self->def->clean() ? 'hacl_edit_with_special' : 'hacl_create_with_special',
+                     Title::newFromText('Special:IntraACL')->getLocalUrl(array(
+                         'action' => ($self->peType == IACL::PE_GROUP ? 'group' : 'acl'),
+                         ($self->peType == IACL::PE_GROUP ? 'group' : 'sd') => $self->title->getPrefixedText(),
+                     )),
+-                    $haclgHaloScriptPath . '/skins/images/edit.png');
++                    $haclgHaloScriptPath . '/skins/images/edit.png')->inContentLanguage()->text();
+                 if ($self->peType == IACL::PE_CATEGORY)
+                 {
+                     // Add "This is category ACL, see category page ACL here"
+                     $pa = Title::newFromText(IACLDefinition::nameOfSD(IACL::PE_PAGE, 'Category:'.$self->peName));
+-                    $html .= wfMsgForContent('hacl_category_acl_shown', $pa->getPrefixedText(), $pa->getLocalUrl(), $haclgHaloScriptPath . '/skins/images/warn.png');
++                    $html .= wfMessage('hacl_category_acl_shown', $pa->getPrefixedText(), $pa->getLocalUrl(), $haclgHaloScriptPath . '/skins/images/warn.png')->inContentLanguage()->text();
+                 }
+                 elseif ($self->peType == IACL::PE_PAGE)
+                 {
+@@ -567,7 +567,7 @@
+                     {
+                         // Add "This is category page ACL, see category ACL here"
+                         $pa = Title::newFromText(IACLDefinition::nameOfSD(IACL::PE_CATEGORY, $peTitle->getText()));
+-                        $html .= wfMsgForContent('hacl_category_page_acl_shown', $pa->getPrefixedText(), $pa->getLocalUrl(), $haclgHaloScriptPath . '/skins/images/warn.png');
++                        $html .= wfMessage('hacl_category_page_acl_shown', $pa->getPrefixedText(), $pa->getLocalUrl(), $haclgHaloScriptPath . '/skins/images/warn.png')->inContentLanguage()->text();
+                     }
+                 }
+             }
+@@ -955,13 +955,13 @@
+             if ($newSDTitle->exists() && $newSDTitle->userCan('delete'))
+             {
+                 $page = new WikiPage($newSDTitle);
+-                $page->doDeleteArticle(wfMsg('hacl_move_acl'));
++                $page->doDeleteArticle(wfMessage( 'hacl_move_acl' )->text());
+             }
+             else
+             {
+                 // FIXME report "permission denied to overwrite $to"
+             }
+-            $oldSDTitle->moveTo($oldSDTitle, false, wfMsg('hacl_move_acl'), true);
++            $oldSDTitle->moveTo($oldSDTitle, false, wfMessage( 'hacl_move_acl' )->text(), true);
+         }
+ 
+         return true;
+@@ -991,38 +991,38 @@
+         $this->makeDef();
+         if ($this->errors)
+         {
+-            $msg[] = wfMsgForContent('hacl_errors_in_definition');
++            $msg[] = wfMessage('hacl_errors_in_definition')->inContentLanguage()->text();
+         }
+         $sdName = self::getCanonicalDefTitle($this->title);
+         if ($sdName !== NULL && $sdName != $this->title->getPrefixedText())
+         {
+-            $msg[] = wfMsgForContent('hacl_non_canonical_acl_short', $sdName);
++            $msg[] = wfMessage('hacl_non_canonical_acl_short', $sdName)->inContentLanguage()->text();
+         }
+         if ($this->isUnprotectable())
+         {
+             // This namespace can not be protected
+-            $msg[] = wfMsgForContent('hacl_unprotectable_namespace');
++            $msg[] = wfMessage('hacl_unprotectable_namespace')->inContentLanguage()->text();
+         }
+         if ($this->title->exists() && !$this->rules)
+         {
+             if ($this->peType == IACL::PE_GROUP)
+             {
+-                $msg[] = wfMsgForContent('hacl_group_must_have_members');
++                $msg[] = wfMessage('hacl_group_must_have_members')->inContentLanguage()->text();
+             }
+             else
+             {
+-                $msg[] = wfMsgForContent('hacl_right_must_have_rights');
++                $msg[] = wfMessage('hacl_right_must_have_rights')->inContentLanguage()->text();
+             }
+         }
+         if (!$this->def)
+         {
+             if ($this->isInterwiki)
+             {
+-                $msg[] = wfMsgForContent('hacl_pe_is_interwiki', $this->peName);
++                $msg[] = wfMessage('hacl_pe_is_interwiki', $this->peName)->inContentLanguage()->text();
+             }
+             else
+             {
+-                $msg[] = wfMsgForContent('hacl_pe_not_exists', $this->peName);
++                $msg[] = wfMessage('hacl_pe_not_exists', $this->peName)->inContentLanguage()->text();
+             }
+         }
+         else
+@@ -1031,7 +1031,7 @@
+             if ($del || $add)
+             {
+                 // TODO Show inconsistency details
+-                $msg[] = wfMsgForContent('hacl_acl_element_inconsistent');
++                $msg[] = wfMessage('hacl_acl_element_inconsistent')->inContentLanguage()->text();
+             }
+         }
+         if (!$asHtml)
+@@ -1042,7 +1042,7 @@
+         $html = '';
+         if ($msg)
+         {
+-            $html .= wfMsgForContent('hacl_consistency_errors');
++            $html .= wfMessage('hacl_consistency_errors')->inContentLanguage()->text();
+             $html .= "<ul>";
+             foreach ($msg as $m)
+             {
+@@ -1071,17 +1071,17 @@
+             global $wgContLang;
+             $userNS = $wgContLang->getNsText(NS_USER);
+             $text .= $isAssignedTo
+-                ? ':;'.wfMsgForContent('hacl_assigned_user')
+-                : ':;'.wfMsgForContent('hacl_user_member');
++                ? ':;'.wfMessage('hacl_assigned_user')->inContentLanguage()->text()
++                : ':;'.wfMessage('hacl_user_member')->inContentLanguage()->text();
+             foreach ($users as &$u)
+             {
+                 if ($u == '*')
+                 {
+-                    $u = wfMsgForContent('hacl_all_users');
++                    $u = wfMessage('hacl_all_users')->inContentLanguage()->text();
+                 }
+                 elseif ($u == '#')
+                 {
+-                    $u = wfMsgForContent('hacl_registered_users');
++                    $u = wfMessage('hacl_registered_users')->inContentLanguage()->text();
+                 }
+                 else
+                 {
+@@ -1096,8 +1096,8 @@
+             global $wgContLang;
+             $aclNS = $wgContLang->getNsText(HACL_NS_ACL);
+             $text .= $isAssignedTo
+-                ? ':;'.wfMsgForContent('hacl_assigned_groups')
+-                : ':;'.wfMsgForContent('hacl_group_member');
++                ? ':;'.wfMessage('hacl_assigned_groups')->inContentLanguage()->text()
++                : ':;'.wfMessage('hacl_group_member')->inContentLanguage()->text();
+             $first = true;
+             foreach ($groups as $g)
+             {
+@@ -1129,8 +1129,8 @@
+         {
+             if (!$this->errors)
+             {
+-                $text .= "\n:;".wfMsgForContent('hacl_error').
+-                    wfMsgForContent('hacl_will_not_work_as_expected');
++                $text .= "\n:;".wfMessage('hacl_error')->inContentLanguage()->text().
++                    wfMessage('hacl_will_not_work_as_expected')->inContentLanguage()->text();
+             }
+             $text .= "\n:*".implode("\n:*", $messages);
+         }
+diff -r -u tmp/extensions/IntraACL/includes/SpecialSelftest.php html/extensions/IntraACL/includes/SpecialSelftest.php
+--- tmp/extensions/IntraACL/includes/SpecialSelftest.php	2016-09-15 21:33:21.000000000 +0300
++++ html/extensions/IntraACL/includes/SpecialSelftest.php	2016-09-15 20:06:04.000000000 +0300
+@@ -65,8 +65,8 @@
+         }
+         else
+         {
+-            $wgOut->setPageTitle(wfMsg('iacl-selftest-title'));
+-            $wgOut->addWikiText(wfMsgNoTrans('iacl-selftest-info', $wgTitle->getFullUrl(array('do' => 1, 'quiet' => 1))));
++            $wgOut->setPageTitle(wfMessage( 'iacl-selftest-title' )->text());
++            $wgOut->addWikiText(wfMessage( 'iacl-selftest-info', $wgTitle->getFullUrl(array('do' => 1, 'quiet' => 1)) )->plain());
+             $wgOut->addHTML('<iframe style="border-width: 0; width: 100%; height: 500px" src="'.$wgTitle->getLocalUrl(array('do' => 1)).'"></iframe>');
+         }
+     }
+diff -r -u tmp/extensions/IntraACL/includes/Toolbar.php html/extensions/IntraACL/includes/Toolbar.php
+--- tmp/extensions/IntraACL/includes/Toolbar.php	2016-09-15 21:33:21.000000000 +0300
++++ html/extensions/IntraACL/includes/Toolbar.php	2016-09-15 20:04:55.000000000 +0300
+@@ -60,8 +60,8 @@
+         $canModify = true;
+         $options = array(array(
+             'value' => 'unprotected',
+-            'name' => wfMsg('hacl_toolbar_unprotected'),
+-            'title' => wfMsg('hacl_toolbar_unprotected'),
++            'name' => wfMessage( 'hacl_toolbar_unprotected' )->text(),
++            'title' => wfMessage( 'hacl_toolbar_unprotected' )->text(),
+         ));
+ 
+         if (!is_object($title))
+@@ -348,7 +348,7 @@
+         $pe = self::getReadableCategories();
+         if (!$pe)
+         {
+-            return wfMsgNoTrans($for_upload ? 'hacl_nonreadable_upload_nocat' : 'hacl_nonreadable_create_nocat');
++            return wfMessage( $for_upload ? 'hacl_nonreadable_upload_nocat' : 'hacl_nonreadable_create_nocat' )->plain();
+         }
+         if ($for_upload)
+         {
+@@ -364,7 +364,7 @@
+                 '\''.$for_upload.')">'.
+                 htmlspecialchars($cat->getText()).'</a>';
+         }
+-        return wfMsgNoTrans($for_upload ? 'hacl_nonreadable_upload' : 'hacl_nonreadable_create', implode(', ', $select));
++        return wfMessage( $for_upload ? 'hacl_nonreadable_upload' : 'hacl_nonreadable_create', implode(', ', $select) )->plain();
+     }
+ 
+     /**
+@@ -600,12 +600,12 @@
+             $selectedSDTitle = IACLDefinition::getSDTitle($selectedSD);
+             $content = '{{#predefined right: '.$selectedSDTitle->getText()."}}\n".
+                 '{{#manage rights: assigned to = User:'.$wgUser->getName()."}}\n";
+-            $newSDArticle->doEdit($content, wfMsg('hacl_comment_protect_with', $selectedSDTitle->getFullText()));
++            $newSDArticle->doEdit($content, wfMessage( 'hacl_comment_protect_with', $selectedSDTitle->getFullText() )->text());
+         }
+         else
+         {
+             // Remove page SD
+-            $newSDArticle->doDeleteArticle(wfMsg('hacl_comment_unprotect'));
++            $newSDArticle->doDeleteArticle(wfMessage( 'hacl_comment_unprotect' )->text());
+         }
+ 
+         // Continue hook processing
+@@ -689,7 +689,7 @@
+                     // Save embedded element SD
+                     $emb_sd_article->doEdit(
+                         '{{#predefined right: '.$articleSD['def_title'].'}}',
+-                        wfMsg('hacl_comment_protect_embedded', ''.$articleSD['def_title']),
++                        wfMessage( 'hacl_comment_protect_embedded', ''.$articleSD['def_title'] )->text(),
+                         EDIT_FORCE_BOT
+                     );
+                 }
+@@ -702,15 +702,14 @@
+         {
+             foreach ($errors as &$e)
+             {
+-                $e = "[[:".$e[0]->getPrefixedText()."]] (".wfMsg('hacl_embedded_error_'.$e[1]).")";
++                $e = "[[:".$e[0]->getPrefixedText()."]] (".wfMessage( 'hacl_embedded_error_'.$e[1] )->text().")";
+             }
+             $wgOut->setTitle(Title::newFromText('Special:IntraACL'));
+-            $wgOut->addWikiText(wfMsgNoTrans(
+-                'hacl_embedded_not_saved',
++            $wgOut->addWikiText(wfMessage( 'hacl_embedded_not_saved',
+                 implode(", ", $errors),
+                 $article->getTitle()->getPrefixedText()
+-            ));
+-            $wgOut->setPageTitle(wfMsg('hacl_embedded_not_saved_title'));
++            ) )->plain();
++            $wgOut->setPageTitle(wfMessage( 'hacl_embedded_not_saved_title' )->text());
+             $wgOut->output();
+             // FIXME terminate MediaWiki more correctly
+             wfGetDB(DB_MASTER)->commit();
+@@ -773,12 +772,12 @@
+                 if ($link['sd_single'])
+                 {
+                     // Already protected by page SD
+-                    $customprot = wfMsgForContent('hacl_toolbar_emb_already_prot');
++                    $customprot = wfMessage('hacl_toolbar_emb_already_prot')->inContentLanguage()->text();
+                 }
+                 else
+                 {
+                     // Custom SD defined
+-                    $customprot = wfMsgForContent('hacl_toolbar_emb_custom_prot', $link['sd_title']->getLocalUrl());
++                    $customprot = wfMessage('hacl_toolbar_emb_custom_prot', $link['sd_title']->getLocalUrl())->inContentLanguage()->text();
+                 }
+             }
+             else
+@@ -788,7 +787,7 @@
+             if ($link['used_on_pages'] > 1)
+             {
+                 $usedon = Title::newFromText("Special:WhatLinksHere/$t")->getLocalUrl(array('hidelinks' => 1));
+-                $usedon = wfMsgForContent('hacl_toolbar_used_on', $link['used_on_pages'], $usedon);
++                $usedon = wfMessage('hacl_toolbar_used_on', $link['used_on_pages'], $usedon)->inContentLanguage()->text();
+             }
+             else
+             {
+@@ -816,16 +815,16 @@
+         {
+             $html[] = '<div class="hacl_embed"><input type="checkbox" id="hacl_emb_all" onchange="hacle_checkall(this, ['.
+                 implode(',',$all).'])" onclick="hacle_checkall(this, ['.implode(',',$all).'])" /> '.
+-                wfMsg('hacl_toolbar_emb_all').'</div>';
++                wfMessage( 'hacl_toolbar_emb_all' )->text().'</div>';
+         }
+         elseif ($html)
+         {
+             $html[] = '<div class="hacl_embed_disabled"><input type="checkbox" disabled="disabled" checked="checked" /> '.
+-                wfMsg('hacl_toolbar_emb_all_already').'</div>';
++                wfMessage( 'hacl_toolbar_emb_all_already' )->text().'</div>';
+         }
+         if ($html)
+         {
+-            array_unshift($html, '<div class="hacl_emb_text">'.wfMsgForContent('hacl_toolbar_protect_embedded').'</div>');
++            array_unshift($html, '<div class="hacl_emb_text">'.wfMessage('hacl_toolbar_protect_embedded')->inContentLanguage()->text().'</div>');
+         }
+         $html = implode("\n", $html);
+         return $html;
+@@ -890,7 +889,7 @@
+                 $title = $peType == IACL::PE_PAGE ? Title::newFromText($peName) : Title::makeTitleSafe(NS_CATEGORY, $peName);
+                 return array(
+                     'class' => false,
+-                    'text'  => wfMsg("hacl_tab_".IACL::$typeToName[$peType]),
++                    'text'  => wfMessage( "hacl_tab_".IACL::$typeToName[$peType] )->text(),
+                     'href'  => $title->getLocalUrl(),
+                 );
+             }
+@@ -916,7 +915,7 @@
+             }
+             return array(
+                 'class' => $sd->exists() ? false : 'new',
+-                'text'  => wfMsg('hacl_tab_acl'),
++                'text'  => wfMessage( 'hacl_tab_acl' )->text(),
+                 'href'  => $sd->getLocalUrl(),
+             );
+         }
+diff -r -u tmp/extensions/IntraACL/templates/HACL_ACLEditor.tpl.php html/extensions/IntraACL/templates/HACL_ACLEditor.tpl.php
+--- tmp/extensions/IntraACL/templates/HACL_ACLEditor.tpl.php	2016-09-15 21:33:25.000000000 +0300
++++ html/extensions/IntraACL/templates/HACL_ACLEditor.tpl.php	2016-09-15 20:35:15.000000000 +0300
+@@ -1,20 +1,20 @@
+ <form action="<?= $wgScript ?>?action=submit" method="POST">
+-<input type="hidden" name="wpEditToken" value="<?= htmlspecialchars($wgUser->editToken()) ?>" />
++<input type="hidden" name="wpEditToken" value="<?= htmlspecialchars($wgUser->getEditToken()) ?>" />
+ <input type="hidden" name="wpEdittime" value="<?= $aclArticle ? $aclArticle->getTimestamp() : '' ?>" />
+ <input type="hidden" name="wpStarttime" value="<?= wfTimestampNow() ?>" />
+ <input type="hidden" id="wpTitle" name="title" value="<?= $aclArticle ? htmlspecialchars($aclTitle->getPrefixedText()) : '' ?>" />
+ <table class="acle">
+ <tr>
+  <td style="vertical-align: top; width: 500px">
+-  <p><b><?= wfMsg('hacl_edit_definition_text') ?></b></p>
++  <p><b><?= wfMessage( 'hacl_edit_definition_text' )->text() ?></b></p>
+   <p><textarea id="acl_def" name="wpTextbox1" rows="6" style="width: 500px" onchange="AE.parse_make_closure()"><?= htmlspecialchars($aclContent) ?></textarea></p>
+-  <p><b><?= wfMsg('hacl_edit_definition_target') ?></b></p>
++  <p><b><?= wfMessage( 'hacl_edit_definition_target' )->text() ?></b></p>
+   <p>
+    <select id="acl_what" onchange="AE.target_change(true)" style="max-width: 200px">
+     <?php foreach($this->aclTargetTypes as $t => $l) { ?>
+-     <optgroup label="<?= wfMsg('hacl_edit_'.$t) ?>">
++     <optgroup label="<?= wfMessage( 'hacl_edit_'.$t )->text() ?>">
+      <?php foreach($l as $k => $true) { ?>
+-      <option id="acl_what_<?= $k ?>" value="<?= $k ?>"><?= wfMsg("hacl_define_$k") ?></option>
++      <option id="acl_what_<?= $k ?>" value="<?= $k ?>"><?= wfMessage( "hacl_define_$k" )->text() ?></option>
+      <?php } ?>
+      </optgroup>
+     <?php } ?>
+@@ -23,13 +23,13 @@
+   </p>
+  </td>
+  <td style="vertical-align: top">
+-  <p><b><?= wfMsg('hacl_edit_modify_definition') ?></b></p>
++  <p><b><?= wfMessage( 'hacl_edit_modify_definition' )->text() ?></b></p>
+   <p>
+    <select id="to_type" onchange="AE.to_type_change()" style="max-width: 200px">
+-    <option value="user"><?= wfMsg('hacl_edit_user') ?></option>
+-    <option value="group"><?= wfMsg('hacl_edit_group') ?></option>
+-    <option value="*"><?= wfMsg('hacl_edit_all') ?></option>
+-    <option value="#"><?= wfMsg('hacl_edit_reg') ?></option>
++    <option value="user"><?= wfMessage( 'hacl_edit_user' )->text() ?></option>
++    <option value="group"><?= wfMessage( 'hacl_edit_group' )->text() ?></option>
++    <option value="*"><?= wfMessage( 'hacl_edit_all' )->text() ?></option>
++    <option value="#"><?= wfMessage( 'hacl_edit_reg' )->text() ?></option>
+    </select>
+    <input type="text" class="txt" id="to_name" style="width: 200px" autocomplete="off" />
+    <a id="hacl_to_goto" href="#" target="_blank" style="display: none" title="">
+@@ -38,22 +38,22 @@
+   </p>
+   <p>
+    <input type="checkbox" id="act_all" onclick="AE.act_change(this)" onchange="AE.act_change(this)" />
+-   <label for="act_all" id="act_label_all"><?= wfMsg('hacl_edit_action_all') ?></label>
++   <label for="act_all" id="act_label_all"><?= wfMessage( 'hacl_edit_action_all' )->text() ?></label>
+    <input type="checkbox" id="act_manage" onclick="AE.act_change(this)" onchange="AE.act_change(this)" />
+-   <label for="act_manage" id="act_label_manage"><?= wfMsg('hacl_edit_action_manage') ?></label>
++   <label for="act_manage" id="act_label_manage"><?= wfMessage( 'hacl_edit_action_manage' )->text() ?></label>
+    <br />
+    <?php foreach(explode(',', 'read,edit,create,delete,move') as $k) { ?>
+    <input type="checkbox" id="act_<?= $k ?>" onclick="AE.act_change(this)" onchange="AE.act_change(this)" />
+-   <label for="act_<?= $k ?>" id="act_label_<?= $k ?>"><?= wfMsg("hacl_edit_action_$k") ?></label>
++   <label for="act_<?= $k ?>" id="act_label_<?= $k ?>"><?= wfMessage( "hacl_edit_action_$k" )->text() ?></label>
+    <?php } ?>
+    <br />
+    <input type="checkbox" id="act_template" onclick="AE.act_change(this)" onchange="AE.act_change(this)" />
+-   <label for="act_template" id="act_label_template"><?= wfMsg('hacl_edit_action_template') ?></label>
++   <label for="act_template" id="act_label_template"><?= wfMessage( 'hacl_edit_action_template' )->text() ?></label>
+   </p>
+   <p>
+-   <label for="inc_acl"><?= wfMsg('hacl_edit_include_right') ?></label>
++   <label for="inc_acl"><?= wfMessage( 'hacl_edit_include_right' )->text() ?></label>
+    <input type="text" class="txt" id="inc_acl" />
+-   <input type="button" value="<?= wfMsg('hacl_edit_include_do') ?>" onclick="AE.include_acl()" />
++   <input type="button" value="<?= wfMessage( 'hacl_edit_include_do' )->text() ?>" onclick="AE.include_acl()" />
+   </p>
+   <div id="acl_embed" style="display: none"></div>
+  </td>
+@@ -61,11 +61,11 @@
+ </table>
+ <p id="acl_pns">
+  <span><a id="acl_pn" class="acl_pn" href="#"></a></span>
+- <input type="submit" name="wpSave" value="<?= wfMsg($aclArticle ? 'hacl_edit_save' : 'hacl_edit_create') ?>" id="wpSave" />&nbsp;<a id="acl_delete_link" href="<?= $aclArticle ? $aclTitle->getLocalUrl(array('action' => 'delete')) : '' ?>"><?= wfMsg('hacl_edit_delete') ?></a>
++ <input type="submit" name="wpSave" value="<?= wfMessage( $aclArticle ? 'hacl_edit_save' : 'hacl_edit_create' )->text() ?>" id="wpSave" />&nbsp;<a id="acl_delete_link" href="<?= $aclArticle ? $aclTitle->getLocalUrl(array('action' => 'delete')) : '' ?>"><?= wfMessage( 'hacl_edit_delete' )->text() ?></a>
+ </p>
+-<p id="acl_pnhint" class="acl_error" style="display: none"><?= wfMsg('hacl_edit_enter_name_first') ?></p>
+-<p id="acl_exists_hint" class="acl_info" style="display: none"><?= wfMsg('hacl_edit_sd_exists') ?></p>
+-<p id="acl_define_rights" class="acl_error"><?= wfMsg('hacl_edit_define_rights') ?></p>
++<p id="acl_pnhint" class="acl_error" style="display: none"><?= wfMessage( 'hacl_edit_enter_name_first' )->text() ?></p>
++<p id="acl_exists_hint" class="acl_info" style="display: none"><?= wfMessage( 'hacl_edit_sd_exists' )->text() ?></p>
++<p id="acl_define_rights" class="acl_error"><?= wfMessage( 'hacl_edit_define_rights' )->text() ?></p>
+ <p id="acl_define_manager" class="acl_error"></p>
+ <p id="acl_non_canonical" class="acl_error"></p>
+ </form>
+diff -r -u tmp/extensions/IntraACL/templates/HACL_ACLListContents.tpl.php html/extensions/IntraACL/templates/HACL_ACLListContents.tpl.php
+--- tmp/extensions/IntraACL/templates/HACL_ACLListContents.tpl.php	2016-09-15 21:33:25.000000000 +0300
++++ html/extensions/IntraACL/templates/HACL_ACLListContents.tpl.php	2016-09-15 19:20:55.000000000 +0300
+@@ -1,13 +1,13 @@
+ <input type="hidden" id="totalPages" value="<?= ceil($total/$limit) ?>" />
+ <input type="hidden" id="pageUrl" value="<?= $pageurl ?>" />
+ <?php if (!$lists) { ?>
+-<?= wfMsg('hacl_acllist_empty') ?>
++<?= wfMessage( 'hacl_acllist_empty' )->text() ?>
+ <?php } if ($prevpage) { ?>
+-<p><a href="<?= $prevpage ?>" onclick="change_page(<?= intval($offset/$limit-1) ?>); return false;"><?= wfMsg('hacl_acllist_prev') ?></a></p>
++<p><a href="<?= $prevpage ?>" onclick="change_page(<?= intval($offset/$limit-1) ?>); return false;"><?= wfMessage( 'hacl_acllist_prev' )->text() ?></a></p>
+ <?php }
+ foreach (array('default', 'namespace', 'category', 'right', 'template', 'special', 'page') as $k) {
+  if (!empty($lists[$k])) { ?>
+- <?= wfMsg('hacl_acllist_'.$k) ?>
++ <?= wfMessage( 'hacl_acllist_'.$k )->text() ?>
+  <ul>
+   <?php foreach ($lists[$k] as $d) { ?>
+    <li>
+@@ -15,13 +15,13 @@
+     <?php if ($d['single']) { ?>
+      = <a title="<?= htmlspecialchars($d['singletip']) ?>" href="<?= $d['singlelink'] ?>"><?= htmlspecialchars($d['singlename']) ?></a>
+     <?php } ?>
+-    &nbsp;<a title="<?= wfMsg('hacl_acllist_view') ?>" href="<?= $d['viewlink'] ?>"><img src="<?= $haclgHaloScriptPath ?>/skins/images/view.png" /></a>
+-    <a title="<?= wfMsg('hacl_acllist_edit') ?>" href="<?= $d['editlink'] ?>"><img src="<?= $haclgHaloScriptPath ?>/skins/images/edit.png" /></a>
++    &nbsp;<a title="<?= wfMessage( 'hacl_acllist_view' )->text() ?>" href="<?= $d['viewlink'] ?>"><img src="<?= $haclgHaloScriptPath ?>/skins/images/view.png" /></a>
++    <a title="<?= wfMessage( 'hacl_acllist_edit' )->text() ?>" href="<?= $d['editlink'] ?>"><img src="<?= $haclgHaloScriptPath ?>/skins/images/edit.png" /></a>
+    </li>
+   <?php } ?>
+  </ul>
+  <?php }
+ }
+ if ($nextpage) { ?>
+-<p><a href="<?= $nextpage ?>" onclick="change_page(<?= intval(1+$offset/$limit) ?>); return false;"><?= wfMsg('hacl_acllist_next') ?></a></p>
++<p><a href="<?= $nextpage ?>" onclick="change_page(<?= intval(1+$offset/$limit) ?>); return false;"><?= wfMessage( 'hacl_acllist_next' )->text() ?></a></p>
+ <?php }
+diff -r -u tmp/extensions/IntraACL/templates/HACL_ACLList.tpl.php html/extensions/IntraACL/templates/HACL_ACLList.tpl.php
+--- tmp/extensions/IntraACL/templates/HACL_ACLList.tpl.php	2016-09-15 21:33:25.000000000 +0300
++++ html/extensions/IntraACL/templates/HACL_ACLList.tpl.php	2016-09-15 19:12:43.000000000 +0300
+@@ -1,28 +1,28 @@
+ <div id="acl_list" style="border: 1px solid gray; width: 500px; height: 500px; padding: 5px; overflow-y: scroll; overflow: -moz-scrollbars-vertical; float: left"></div>
+ 
+ <div style="float: left; margin: 0 8px">
+-<p><b><?= wfMsg('hacl_acllist_filter_name') ?></b></p>
++<p><b><?= wfMessage( 'hacl_acllist_filter_name' )->text() ?></b></p>
+ <p><input type="text" id="acl_filter" value="<?= htmlspecialchars($q['filter']) ?>" onchange="change_filter()" onkeyup="change_filter()" style="width: 400px" /></p>
+ 
+-<p><b><?= wfMsg('hacl_acllist_filter_type') ?></b></p>
+-<p><input type="checkbox" id="atg_all" <?= $types['all'] ? ' checked="checked"' : '' ?> onclick="change_filter(this)" onchange="change_filter(this)" /> <label for="atg_all"><?= wfMsg('hacl_acllist_typegroup_all') ?></label></p>
++<p><b><?= wfMessage( 'hacl_acllist_filter_type' )->text() ?></b></p>
++<p><input type="checkbox" id="atg_all" <?= $types['all'] ? ' checked="checked"' : '' ?> onclick="change_filter(this)" onchange="change_filter(this)" /> <label for="atg_all"><?= wfMessage( 'hacl_acllist_typegroup_all' )->text() ?></label></p>
+ <ul>
+ <?php foreach($this->aclTargetTypes as $t => $l) { ?>
+  <li>
+-  <input type="checkbox" id="atg_<?= $t ?>" <?= $types[$t] ? ' checked="checked"' : '' ?> onclick="change_filter(this)" onchange="change_filter(this)" /> <label for="atg_<?= $t ?>"><?= wfMsg('hacl_acllist_typegroup_'.$t) ?></label>
++  <input type="checkbox" id="atg_<?= $t ?>" <?= $types[$t] ? ' checked="checked"' : '' ?> onclick="change_filter(this)" onchange="change_filter(this)" /> <label for="atg_<?= $t ?>"><?= wfMessage( 'hacl_acllist_typegroup_'.$t )->text() ?></label>
+   <ul>
+   <?php foreach($l as $k => $true) { ?>
+-   <li><input type="checkbox" id="at_<?= $k ?>" <?= $types[$k] ? ' checked="checked"' : '' ?> onclick="change_filter(this)" onchange="change_filter(this)" /> <label for="at_<?= $k ?>"><?= wfMsg('hacl_acllist_type_'.$k) ?></label></li>
++   <li><input type="checkbox" id="at_<?= $k ?>" <?= $types[$k] ? ' checked="checked"' : '' ?> onclick="change_filter(this)" onchange="change_filter(this)" /> <label for="at_<?= $k ?>"><?= wfMessage( 'hacl_acllist_type_'.$k )->text() ?></label></li>
+   <?php } ?>
+   </ul>
+  </li>
+ <?php } ?>
+ </ul>
+ 
+-<p><b><?= wfMsg('hacl_acllist_perpage') ?></b> <input type="text" id="perPage" value="<?= $limit ?>" onchange="change_filter()" /></p>
++<p><b><?= wfMessage( 'hacl_acllist_perpage' )->text() ?></b> <input type="text" id="perPage" value="<?= $limit ?>" onchange="change_filter()" /></p>
+ 
+ <input type="hidden" id="acl_page" value="<?= intval($q['offset']/$limit) ?>" />
+-<p id="resultPagesP" style="display: none"><b><?= wfMsg('hacl_acllist_result_page') ?></b> <span id="resultPages"></span></p>
++<p id="resultPagesP" style="display: none"><b><?= wfMessage( 'hacl_acllist_result_page' )->text() ?></b> <span id="resultPages"></span></p>
+ 
+ </div>
+ 
+diff -r -u tmp/extensions/IntraACL/templates/HACL_GroupEditor.tpl.php html/extensions/IntraACL/templates/HACL_GroupEditor.tpl.php
+--- tmp/extensions/IntraACL/templates/HACL_GroupEditor.tpl.php	2016-09-15 21:33:25.000000000 +0300
++++ html/extensions/IntraACL/templates/HACL_GroupEditor.tpl.php	2016-09-15 20:37:04.000000000 +0300
+@@ -2,41 +2,41 @@
+ <tr>
+  <td style="vertical-align: top; width: 500px">
+   <form action="<?= $wgScript ?>?action=submit" method="POST" id="groupEditForm">
+-   <input type="hidden" name="wpEditToken" value="<?= htmlspecialchars($wgUser->editToken()) ?>" />
++   <input type="hidden" name="wpEditToken" value="<?= htmlspecialchars($wgUser->getEditToken()) ?>" />
+    <input type="hidden" name="wpEdittime" value="<?= $grpTitle ? $grpArticle->getTimestamp() : '' ?>" />
+    <input type="hidden" name="wpStarttime" value="<?= wfTimestampNow() ?>" />
+    <input type="hidden" id="wpTitle" name="title" value="<?= $grpTitle ? htmlspecialchars($grpTitle->getPrefixedText()) : '' ?>" />
+    <input type="hidden" name="wpSave" value="Save" />
+    <p>
+-    <b><?= wfMsg('hacl_grp_name') ?></b>
++    <b><?= wfMessage( 'hacl_grp_name' )->text() ?></b>
+     <input type="text" class="txt" id="grp_name" style="width: 200px" onchange="GE.name_change(true)" onkeyup="GE.name_change()"  />
+    </p>
+-   <p><b><?= wfMsg('hacl_grp_definition_text') ?></b></p>
++   <p><b><?= wfMessage( 'hacl_grp_definition_text' )->text() ?></b></p>
+    <p><textarea id="grp_def" name="wpTextbox1" rows="6" style="width: 500px" onchange="GE.parse_fill_indirect()"><?= $grpTitle ? htmlspecialchars($grpArticle->getText()) : '' ?></textarea></p>
+   </form>
+  </td>
+  <td style="vertical-align: top">
+   <table>
+    <tr>
+-    <th colspan="2"><?= wfMsg('hacl_grp_members') ?></th>
++    <th colspan="2"><?= wfMessage( 'hacl_grp_members' )->text() ?></th>
+    </tr>
+    <tr>
+-    <th><?= wfMsg('hacl_grp_users') ?></th>
++    <th><?= wfMessage( 'hacl_grp_users' )->text() ?></th>
+     <td><input type="text" class="txt" id="member_users" style="width: 200px" autocomplete="off" /></td>
+    </tr>
+    <tr>
+-    <th><?= wfMsg('hacl_grp_groups') ?></th>
++    <th><?= wfMessage( 'hacl_grp_groups' )->text() ?></th>
+     <td><input type="text" class="txt" id="member_groups" style="width: 200px" autocomplete="off" /></td>
+    </tr>
+    <tr>
+-    <th colspan="2"><?= wfMsg('hacl_grp_managers') ?></th>
++    <th colspan="2"><?= wfMessage( 'hacl_grp_managers' )->text() ?></th>
+    </tr>
+    <tr>
+-    <th><?= wfMsg('hacl_grp_users') ?></th>
++    <th><?= wfMessage( 'hacl_grp_users' )->text() ?></th>
+     <td><input type="text" class="txt" id="manager_users" style="width: 200px" autocomplete="off" /></td>
+    </tr>
+    <tr>
+-    <th><?= wfMsg('hacl_grp_groups') ?></th>
++    <th><?= wfMessage( 'hacl_grp_groups' )->text() ?></th>
+     <td><input type="text" class="txt" id="manager_groups" style="width: 200px" autocomplete="off" /></td>
+    </tr>
+   </table>
+@@ -45,10 +45,10 @@
+ </table>
+ <p id="grp_pns">
+  <span><a id="grp_pn" class="acl_pn" href="#"></a></span>
+- <input type="button" value="<?= wfMsg($grpTitle ? 'hacl_grp_save' : 'hacl_grp_create') ?>" id="wpSave" onclick="document.getElementById('groupEditForm').submit()" />
+- <a id="grp_delete_link" href="<?= $grpTitle ? $grpTitle->getLocalUrl(array('action' => 'delete')) : '' ?>"><?= wfMsg('hacl_grp_delete') ?></a>
++ <input type="button" value="<?= wfMessage( $grpTitle ? 'hacl_grp_save' : 'hacl_grp_create' )->text() ?>" id="wpSave" onclick="document.getElementById('groupEditForm').submit()" />
++ <a id="grp_delete_link" href="<?= $grpTitle ? $grpTitle->getLocalUrl(array('action' => 'delete')) : '' ?>"><?= wfMessage( 'hacl_grp_delete' )->text() ?></a>
+ </p>
+-<p id="grp_pnhint" class="acl_error" style="display: none"><?= wfMsg('hacl_grp_enter_name_first') ?></p>
+-<p id="grp_exists_hint" class="acl_info" style="display: none"><?= wfMsg('hacl_grp_exists') ?></p>
+-<p id="grp_define_member" class="acl_error" style="display: none"><?= wfMsg('hacl_grp_define_members') ?></p>
+-<p id="grp_define_manager" class="acl_error" style="display: none"><?= wfMsg('hacl_grp_define_managers') ?></p>
++<p id="grp_pnhint" class="acl_error" style="display: none"><?= wfMessage( 'hacl_grp_enter_name_first' )->text() ?></p>
++<p id="grp_exists_hint" class="acl_info" style="display: none"><?= wfMessage( 'hacl_grp_exists' )->text() ?></p>
++<p id="grp_define_member" class="acl_error" style="display: none"><?= wfMessage( 'hacl_grp_define_members' )->text() ?></p>
++<p id="grp_define_manager" class="acl_error" style="display: none"><?= wfMessage( 'hacl_grp_define_managers' )->text() ?></p>
+diff -r -u tmp/extensions/IntraACL/templates/HACL_GroupListContents.tpl.php html/extensions/IntraACL/templates/HACL_GroupListContents.tpl.php
+--- tmp/extensions/IntraACL/templates/HACL_GroupListContents.tpl.php	2016-09-15 21:33:25.000000000 +0300
++++ html/extensions/IntraACL/templates/HACL_GroupListContents.tpl.php	2016-09-15 19:27:12.000000000 +0300
+@@ -1,12 +1,12 @@
+ <?php if (!$groups) {
+-print wfMsg('hacl_grouplist_empty');
++print wfMessage( 'hacl_grouplist_empty' )->text();
+ } else { ?>
+ <ul>
+ <?php foreach ($groups as $gr) { ?>
+  <li>
+   <a title="<?= $gr['name'] ?>" href="<?= $gr['editlink'] ?>"><?= $gr['real'] ?></a>&nbsp;
+-  <a title="<?= wfMsg('hacl_grouplist_view') ?>" href="<?= $gr['viewlink'] ?>"><img src="<?= $haclgHaloScriptPath ?>/skins/images/view.png" /></a>
+-  <a title="<?= wfMsg('hacl_grouplist_edit') ?>" href="<?= $gr['editlink'] ?>"><img src="<?= $haclgHaloScriptPath ?>/skins/images/edit.png" /></a>
++  <a title="<?= wfMessage( 'hacl_grouplist_view' )->text() ?>" href="<?= $gr['viewlink'] ?>"><img src="<?= $haclgHaloScriptPath ?>/skins/images/view.png" /></a>
++  <a title="<?= wfMessage( 'hacl_grouplist_edit' )->text() ?>" href="<?= $gr['editlink'] ?>"><img src="<?= $haclgHaloScriptPath ?>/skins/images/edit.png" /></a>
+  </li>
+ <?php } ?>
+ </ul>
+diff -r -u tmp/extensions/IntraACL/templates/HACL_GroupList.tpl.php html/extensions/IntraACL/templates/HACL_GroupList.tpl.php
+--- tmp/extensions/IntraACL/templates/HACL_GroupList.tpl.php	2016-09-15 21:33:25.000000000 +0300
++++ html/extensions/IntraACL/templates/HACL_GroupList.tpl.php	2016-09-15 19:25:50.000000000 +0300
+@@ -1,6 +1,6 @@
+-<p><b><?= wfMsg('hacl_grouplist_filter_name') ?></b></p>
++<p><b><?= wfMessage( 'hacl_grouplist_filter_name' )->text() ?></b></p>
+ <p><input type="text" id="acl_filter" onchange="change_filter()" onkeyup="change_filter()" style="width: 400px" /></p>
+-<p><b><?= wfMsg('hacl_grouplist_filter_not_name') ?></b></p>
++<p><b><?= wfMessage( 'hacl_grouplist_filter_not_name' )->text() ?></b></p>
+ <p><input type="text" id="acl_not_filter" onchange="change_filter()" onkeyup="change_filter()" style="width: 400px" /></p>
+ 
+ <div id="acl_list" style="border: 1px solid gray; width: 500px; height: 500px; padding: 5px; overflow-y: scroll; overflow: -moz-scrollbars-vertical; float: left"></div>
+diff -r -u tmp/extensions/IntraACL/templates/HACL_QuickACL.tpl.php html/extensions/IntraACL/templates/HACL_QuickACL.tpl.php
+--- tmp/extensions/IntraACL/templates/HACL_QuickACL.tpl.php	2016-09-15 21:33:25.000000000 +0300
++++ html/extensions/IntraACL/templates/HACL_QuickACL.tpl.php	2016-09-15 19:30:50.000000000 +0300
+@@ -1,24 +1,24 @@
+-<?= wfMsg('hacl_qacl_manage_text') ?>
++<?= wfMessage( 'hacl_qacl_manage_text' )->text() ?>
+ <fieldset style="margin: 0 0 16px 0">
+- <legend><?= wfMsg('hacl_qacl_filter_sds') ?></legend>
++ <legend><?= wfMessage( 'hacl_qacl_filter_sds' )->text() ?></legend>
+  <form action="<?= $wgScript ?>">
+-  <label for="hacl_qafilter"><?= wfMsg('hacl_qacl_filter') ?></label>
++  <label for="hacl_qafilter"><?= wfMessage( 'hacl_qacl_filter' )->text() ?></label>
+   <input type="hidden" name="title" value="Special:IntraACL" />
+   <input type="hidden" name="action" value="quickaccess" />
+   <input type="text" name="like" id="hacl_qafilter" value="<?= htmlspecialchars($like) ?>" />
+-  <input type="submit" value="<?= wfMsg('hacl_qacl_filter_submit') ?>" />
++  <input type="submit" value="<?= wfMessage( 'hacl_qacl_filter_submit' )->text() ?>" />
+  </form>
+ </fieldset>
+ <?php if ($templates) { ?>
+-<p><?= wfMsg('hacl_qacl_hint') ?></p>
++<p><?= wfMessage( 'hacl_qacl_hint' )->text() ?></p>
+ <form action="<?= $wgScript ?>?title=Special:IntraACL&action=quickaccess&save=1" method="POST">
+  <input type="hidden" name="like" value="<?= htmlspecialchars($like) ?>" />
+  <table class="wikitable">
+   <tr>
+-   <th><?= wfMsg('hacl_qacl_col_select') ?></th>
+-   <th><?= wfMsg('hacl_qacl_col_default') ?></th>
+-   <th><?= wfMsg('hacl_qacl_col_name') ?></th>
+-   <th><?= wfMsg('hacl_qacl_col_actions') ?></th>
++   <th><?= wfMessage( 'hacl_qacl_col_select' )->text() ?></th>
++   <th><?= wfMessage( 'hacl_qacl_col_default' )->text() ?></th>
++   <th><?= wfMessage( 'hacl_qacl_col_name' )->text() ?></th>
++   <th><?= wfMessage( 'hacl_qacl_col_actions' )->text() ?></th>
+   </tr>
+   <?php foreach ($templates as $sd) { ?>
+    <tr>
+@@ -30,7 +30,7 @@
+     </td>
+     <td style="text-align: center"><a title="<?= $sd['title']->getText() ?>" href="<?= $sd['viewlink'] ?>"><?= $sd['title']->getText() ?></a></td>
+     <td style="text-align: center">
+-     <a title="<?= wfMsg('hacl_acllist_edit') ?>" href="<?= $sd['editlink'] ?>">
++     <a title="<?= wfMessage( 'hacl_acllist_edit' )->text() ?>" href="<?= $sd['editlink'] ?>">
+       <img src="<?= $haclgHaloScriptPath ?>/skins/images/edit.png" />
+      </a>
+     </td>
+@@ -39,11 +39,11 @@
+   <tr>
+    <td></td>
+    <td style="text-align: center"><input type="radio" name="qa_default" id="qd_clear" value="" <?= !$quickacl->default_pe_id ? ' checked="checked"' : '' ?> /></td>
+-   <td style="text-align: center" colspan="2"><?= wfMsg('hacl_qacl_empty_default') ?></td>
++   <td style="text-align: center" colspan="2"><?= wfMessage( 'hacl_qacl_empty_default' )->text() ?></td>
+   </tr>
+  </table>
+  <p>
+-  <input type="submit" value="<?= wfMsg('hacl_qacl_save') ?>" style="font-weight: bold" />
++  <input type="submit" value="<?= wfMessage( 'hacl_qacl_save' )->text() ?>" style="font-weight: bold" />
+  </p>
+ </form>
+ <script language="JavaScript">
+@@ -67,5 +67,5 @@
+ };
+ </script>
+ <?php } else { ?>
+- <?= wfMsg('hacl_qacl_empty') ?>
++ <?= wfMessage( 'hacl_qacl_empty' )->text() ?>
+ <?php } ?>
+diff -r -u tmp/extensions/IntraACL/templates/HACL_Toolbar.tpl.php html/extensions/IntraACL/templates/HACL_Toolbar.tpl.php
+--- tmp/extensions/IntraACL/templates/HACL_Toolbar.tpl.php	2016-09-15 21:33:25.000000000 +0300
++++ html/extensions/IntraACL/templates/HACL_Toolbar.tpl.php	2016-09-15 17:02:53.000000000 +0300
+@@ -1,13 +1,13 @@
+ <div id="hacl_toolbar">
+ <?php if (count($options) > 1 && $canModify) { ?>
+- <label for="hacl_protected_with"><?= wfMsg('hacl_toolbar_page_prot') ?></label>
+- <select name="hacl_protected_with" id="hacl_protected_with" onchange="haclt_change_goto(this, '<?= wfMsg('hacl_toolbar_goto') ?>')">
++ <label for="hacl_protected_with"><?= wfMessage( 'hacl_toolbar_page_prot' )->text() ?></label>
++ <select name="hacl_protected_with" id="hacl_protected_with" onchange="haclt_change_goto(this, '<?= wfMessage( 'hacl_toolbar_goto' )->text() ?>')">
+   <?php foreach($options as $o) { ?>
+    <option title="<?= htmlspecialchars($o['title']) ?>" <?= !empty($o['current']) ? ' selected="selected"' : '' ?> value="<?= htmlspecialchars($o['value']) ?>"><?= htmlspecialchars($o['name']) ?></option>
+   <?php } ?>
+  </select>
+  <?php if ($selectedIndex !== false && $options[$selectedIndex]['title']) { ?>
+-  <a id="hacl_toolbar_goto" href="<?= Title::newFromText($options[$selectedIndex]['title'])->getLocalUrl() ?>" target="_blank" title="<?= htmlspecialchars(wfMsg('hacl_toolbar_goto', $options[$selectedIndex]['title'])) ?>">
++  <a id="hacl_toolbar_goto" href="<?= Title::newFromText($options[$selectedIndex]['title'])->getLocalUrl() ?>" target="_blank" title="<?= htmlspecialchars(wfMessage( 'hacl_toolbar_goto', $options[$selectedIndex]['title'] )->text()) ?>">
+    <img src="<?= $wgScriptPath ?>/resources/src/mediawiki.skinning/images/external-ltr.png" width="10" height="10" alt="&rarr;" />
+   </a>
+  <?php } else { ?>
+@@ -16,30 +16,30 @@
+   </a>
+  <?php } ?>
+ <?php } elseif (!$canModify) { ?>
+- <?= wfMsg('hacl_toolbar_cannot_modify') ?>
++ <?= wfMessage( 'hacl_toolbar_cannot_modify' )->text() ?>
+ <?php } else { ?>
+- <?= wfMsg('hacl_toolbar_no_right_templates', $quick_acl_link) ?>
++ <?= wfMessage( 'hacl_toolbar_no_right_templates', $quick_acl_link )->text() ?>
+ <?php } if ($globalACL) { ?>
+  <div class="haclt_tip">
+-  <a onclick="haclt_show('gacl')" class="haclt_title" id="haclt_gacl_title"><?= wfMsg('hacl_toolbar_global_acl') ?></a>
++  <a onclick="haclt_show('gacl')" class="haclt_title" id="haclt_gacl_title"><?= wfMessage( 'hacl_toolbar_global_acl' )->text() ?></a>
+   <div class="haclt_text" id="haclt_gacl_text" style="display: none"><div class="x">
+-   <?= wfMsg('hacl_toolbar_global_acl_tip') ?><br /><?= $globalACL ?>
++   <?= wfMessage( 'hacl_toolbar_global_acl_tip' )->text() ?><br /><?= $globalACL ?>
+   </div></div>
+  </div>
+ <?php } if ($anyLinks || $embeddedToolbar) { ?>
+  <div class="haclt_tip">
+-  <a onclick="haclt_show('emb')" class="haclt_title" id="haclt_emb_title"><?= wfMsg('hacl_toolbar_embedded_acl') ?></a>
++  <a onclick="haclt_show('emb')" class="haclt_title" id="haclt_emb_title"><?= wfMessage( 'hacl_toolbar_embedded_acl' )->text() ?></a>
+   <div class="haclt_text" id="haclt_emb_text" style="display: none"><div class="x<?= $embeddedToolbar ? ' xl' : '' ?>" id="haclt_emb">
+-   <?= $embeddedToolbar ? $embeddedToolbar : wfMsg('hacl_toolbar_loading') ?>
++   <?= $embeddedToolbar ? $embeddedToolbar : wfMessage( 'hacl_toolbar_loading' )->text() ?>
+   </div></div>
+  </div>
+ <?php } if ($title->exists()) { ?>
+- <a style="text-decoration: none" class="haclt_title" target="_blank" href="index.php?title=Special:IntraACL&action=acl&sd=<?= urlencode($haclgContLang->getPetPrefix($title->getNamespace() == NS_CATEGORY ? IACL::PE_CATEGORY : IACL::PE_PAGE).'/'.$title) ?>"><img src="<?= $haclgHaloScriptPath ?>/skins/images/edit.png" width="16" height="16" alt="Edit" /> <?= wfMsg('hacl_toolbar_advanced_'.($pageSDId ? 'edit' : 'create')) ?></a>
++ <a style="text-decoration: none" class="haclt_title" target="_blank" href="index.php?title=Special:IntraACL&action=acl&sd=<?= urlencode($haclgContLang->getPetPrefix($title->getNamespace() == NS_CATEGORY ? IACL::PE_CATEGORY : IACL::PE_PAGE).'/'.$title) ?>"><img src="<?= $haclgHaloScriptPath ?>/skins/images/edit.png" width="16" height="16" alt="Edit" /> <?= wfMessage( 'hacl_toolbar_advanced_'.($pageSDId ? 'edit' : 'create') )->text() ?></a>
+ <?php } elseif (!$hasQuickACL) {?>
+- <?= wfMsg('hacl_toolbar_select_qacl', $quick_acl_link) ?>
++ <?= wfMessage( 'hacl_toolbar_select_qacl', $quick_acl_link )->text() ?>
+ <?php } if ($nonreadable) { ?>
+  <input style="vertical-align: middle" type="checkbox" name="hacl_nonreadable_create" id="hacl_nonreadable_create" />
+- <label style="vertical-align: middle" for="hacl_nonreadable_create"><?= wfMsg('hacl_create_nonreadable_article') ?></label>
++ <label style="vertical-align: middle" for="hacl_nonreadable_create"><?= wfMessage( 'hacl_create_nonreadable_article' )->text() ?></label>
+ <?php } ?>
+- <div class="qacl"><a target="_blank" href="<?= $quick_acl_link ?>" title="<?= wfMsg('hacl_toolbar_qacl_title') ?>"><?= wfMsg('hacl_toolbar_qacl') ?></a></div>
++ <div class="qacl"><a target="_blank" href="<?= $quick_acl_link ?>" title="<?= wfMessage( 'hacl_toolbar_qacl_title' )->text() ?>"><?= wfMessage( 'hacl_toolbar_qacl' )->text() ?></a></div>
+ </div>
+Binary files tmp/images/temp/l10n_cache-en.cdb and html/images/temp/l10n_cache-en.cdb differ
+Binary files tmp/images/temp/l10n_cache-ru.cdb and html/images/temp/l10n_cache-ru.cdb differ
+Only in html/images/temp: lessphp_s1x6usbtkogs4cokkcc8s488cwo884w.lesscache
+Only in html/images/thumb/0/0a/Advertisement-juniorPHP.png: 127px-Advertisement-juniorPHP.png
+Only in html/images/thumb/0/0a/Advertisement-juniorPHP.png: 169px-Advertisement-juniorPHP.png
+Only in html/images/thumb/0/0a/Openvpn_client_nslookup.jpg: 240px-Openvpn_client_nslookup.jpg
+Only in html/images/thumb/0/0a/TT-problem-chrom.png: 240px-TT-problem-chrom.png
+Only in html/images/thumb/0/0c/DSCN0680.JPG: 135px-DSCN0680.JPG
+Only in html/images/thumb/0/0c/DSCN0680.JPG: 180px-DSCN0680.JPG
+Only in html/images/thumb/0/0e/Company_structure.jpg: 240px-Company_structure.jpg
+Only in html/images/thumb/0/0e/HostCMS_Site_menu.jpg: 240px-HostCMS_Site_menu.jpg
+Only in html/images/thumb/1/18/Webdesign_kryg.bmp: 135px-Webdesign_kryg.bmp.png
+Only in html/images/thumb/1/1b/Openvpn_client_android_configure_import.png: 101px-Openvpn_client_android_configure_import.png
+Only in html/images/thumb/1/1b/Openvpn_client_android_configure_import.png: 135px-Openvpn_client_android_configure_import.png
+Only in html/images/thumb/1/1e/BankUA.png: 240px-BankUA.png
+Only in html/images/thumb/2/27/Pocket24.ru2.png: 180px-Pocket24.ru2.png
+Only in html/images/thumb/2/27/Pocket24.ru2.png: 240px-Pocket24.ru2.png
+Only in html/images/thumb/2/28/Openvpn_client_connect.jpg: 160px-Openvpn_client_connect.jpg
+Only in html/images/thumb/2/28/Openvpn_client_connect.jpg: 214px-Openvpn_client_connect.jpg
+Only in html/images/thumb/3/38/Face.jpg: 240px-Face.jpg
+Only in html/images/thumb/4/4d/Openvpn_client_configure_csettings.jpg: 160px-Openvpn_client_configure_csettings.jpg
+Only in html/images/thumb/4/4d/Openvpn_client_configure_csettings.jpg: 213px-Openvpn_client_configure_csettings.jpg
+Only in html/images/thumb/4/4d/Openvpn_client_configure_import_2.jpg: 155px-Openvpn_client_configure_import_2.jpg
+Only in html/images/thumb/4/4d/Openvpn_client_configure_import_2.jpg: 207px-Openvpn_client_configure_import_2.jpg
+Only in html/images/thumb/4/4e/HostCMS_Menu_makeup_example.jpg: 240px-HostCMS_Menu_makeup_example.jpg
+Only in html/images/thumb/5/53/Openvpn_client_configure_import.jpg: 155px-Openvpn_client_configure_import.jpg
+Only in html/images/thumb/5/53/Openvpn_client_configure_import.jpg: 207px-Openvpn_client_configure_import.jpg
+Only in html/images/thumb/5/5d/Bad.png: 240px-Bad.png
+Only in html/images/thumb/6/6b/HostCMS_templates2.JPG: 180px-HostCMS_templates2.JPG
+Only in html/images/thumb/6/6b/HostCMS_templates2.JPG: 240px-HostCMS_templates2.JPG
+Only in html/images/thumb/7/75/2.JPG: 180px-2.JPG
+Only in html/images/thumb/7/75/2.JPG: 240px-2.JPG
+Only in html/images/thumb/7/7e/Openvpn_client_configure_check_tap_adapter.jpg: 155px-Openvpn_client_configure_check_tap_adapter.jpg
+Only in html/images/thumb/7/7e/Openvpn_client_configure_check_tap_adapter.jpg: 206px-Openvpn_client_configure_check_tap_adapter.jpg
+Only in html/images/thumb/8/88/HostCMS_menu_PHP.jpg: 240px-HostCMS_menu_PHP.jpg
+Only in html/images/thumb/8/8b/DataBase.png: 180px-DataBase.png
+Only in html/images/thumb/8/8b/DataBase.png: 240px-DataBase.png
+Only in html/images/thumb/9/91/HostCMS_edit_structure_node.jpg: 180px-HostCMS_edit_structure_node.jpg
+Only in html/images/thumb/9/91/HostCMS_edit_structure_node.jpg: 240px-HostCMS_edit_structure_node.jpg
+Only in html/images/thumb/9/99/Openvpn_client_configure_add_tap_adapter.jpg: 156px-Openvpn_client_configure_add_tap_adapter.jpg
+Only in html/images/thumb/9/99/Openvpn_client_configure_add_tap_adapter.jpg: 207px-Openvpn_client_configure_add_tap_adapter.jpg
+Only in html/images/thumb/9/9a/HostCMS_templates1.JPG: 168px-HostCMS_templates1.JPG
+Only in html/images/thumb/9/9a/HostCMS_templates1.JPG: 224px-HostCMS_templates1.JPG
+Only in html/images/thumb/a/a1/Good.png: 240px-Good.png
+Only in html/images/thumb/a/a6/Anatoliy.Zhuravlyov.png: 124px-Anatoliy.Zhuravlyov.png.jpeg
+Only in html/images/thumb/a/a6/Anatoliy.Zhuravlyov.png: 166px-Anatoliy.Zhuravlyov.png.jpeg
+Only in html/images/thumb/a/ae/Bank.png: 240px-Bank.png
+Only in html/images/thumb/b/b3/Info.png: 180px-Info.png
+Only in html/images/thumb/b/b3/Info.png: 240px-Info.png
+Only in html/images/thumb/b/b9/HostCMS_Pages_and_documents.jpg: 240px-HostCMS_Pages_and_documents.jpg
+Only in html/images/thumb/c/c2/HostCMS_templates3.JPG: 180px-HostCMS_templates3.JPG
+Only in html/images/thumb/c/c2/HostCMS_templates3.JPG: 240px-HostCMS_templates3.JPG
+Only in html/images/thumb/c/c6/DECPhoto.png: 143px-DECPhoto.png
+Only in html/images/thumb/c/c6/DECPhoto.png: 191px-DECPhoto.png
+Only in html/images/thumb/c/cf/Krug2008-cover.jpg: 138px-Krug2008-cover.jpg
+Only in html/images/thumb/c/cf/Krug2008-cover.jpg: 184px-Krug2008-cover.jpg
+Only in html/images/thumb/d/d3/Openvpn_client_android_configure_import_types.png: 101px-Openvpn_client_android_configure_import_types.png
+Only in html/images/thumb/d/d3/Openvpn_client_android_configure_import_types.png: 135px-Openvpn_client_android_configure_import_types.png
+Only in html/images/thumb/d/d4/BugOFF_Calendar_scheme.png: 180px-BugOFF_Calendar_scheme.png
+Only in html/images/thumb/d/d4/BugOFF_Calendar_scheme.png: 240px-BugOFF_Calendar_scheme.png
+Only in html/images/thumb/d/db/Pocket24.ru.png: 180px-Pocket24.ru.png
+Only in html/images/thumb/d/db/Pocket24.ru.png: 240px-Pocket24.ru.png
+Only in html/images/thumb/e/e8/Markina_elena.jpg: 180px-Markina_elena.jpg
+Only in html/images/thumb/e/e8/Markina_elena.jpg: 240px-Markina_elena.jpg
+Only in html/images/thumb/e/e8/Openvpn_client_install_Localization_ctype.jpg: 240px-Openvpn_client_install_Localization_ctype.jpg
+Only in html/images/thumb/f/f3/1.jpg: 158px-1.jpg
+Only in html/images/thumb/f/f3/1.jpg: 211px-1.jpg
+Only in html/images/thumb/f/f4/HostCMS_New_XSL-template.jpg: 180px-HostCMS_New_XSL-template.jpg
+Only in html/images/thumb/f/f4/HostCMS_New_XSL-template.jpg: 240px-HostCMS_New_XSL-template.jpg
+Only in html/images/thumb/f/f5/Blank_person.gif: 240px-Blank_person.gif
+diff -r -u tmp/includes/api/ApiBase.php html/includes/api/ApiBase.php
+--- tmp/includes/api/ApiBase.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/api/ApiBase.php	2016-09-15 13:23:42.000000000 +0300
+@@ -822,6 +822,11 @@
+ 				$this->dieUsageMsg( [ 'nosuchpageid', $params['pageid'] ] );
+ 			}
+ 		}
++		// <IntraACL>
++		if ( !$pageObj->getTitle()->userCan( 'read' ) ) {
++			$this->dieUsageMsg( array( 'permission-denied' ) );
++		}
++		// </IntraACL>
+ 
+ 		return $pageObj;
+ 	}
+Only in html/includes/api: ApiBase.php.orig
+Only in html/includes/api: ApiBase.php.rej
+diff -r -u tmp/includes/api/ApiExpandTemplates.php html/includes/api/ApiExpandTemplates.php
+--- tmp/includes/api/ApiExpandTemplates.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/api/ApiExpandTemplates.php	2016-09-15 13:23:42.000000000 +0300
+@@ -66,6 +66,11 @@
+ 				$this->dieUsageMsg( [ 'invalidtitle', $params['title'] ] );
+ 			}
+ 		}
++		// <IntraACL>
++		if ( !$title_obj->userCan( 'read' ) ) {
++			$this->dieUsageMsg( array( 'invalidtitle', $params['title'] ) );
++		}
++		// </IntraACL>
+ 
+ 		$result = $this->getResult();
+ 
+Only in html/includes/api: ApiExpandTemplates.php.orig
+Only in html/includes/api: ApiExpandTemplates.php.rej
+Only in html/includes/api: ApiImageRotate.php.orig
+Only in html/includes/api: ApiImageRotate.php.rej
+Only in html/includes/api: ApiMove.php.orig
+Only in html/includes/api: ApiMove.php.rej
+diff -r -u tmp/includes/api/ApiPageSet.php html/includes/api/ApiPageSet.php
+--- tmp/includes/api/ApiPageSet.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/api/ApiPageSet.php	2016-09-15 13:23:21.000000000 +0300
+@@ -729,6 +729,11 @@
+ 	public function processDbRow( $row ) {
+ 		// Store Title object in various data structures
+ 		$title = Title::newFromRow( $row );
++		// <IntraACL>
++		if ( !$title->userCan( 'read' ) ) {
++			return false;
++		}
++		// </IntraACL>
+ 
+ 		$pageId = intval( $row->page_id );
+ 		$this->mAllPages[$row->page_namespace][$row->page_title] = $pageId;
+@@ -745,6 +750,7 @@
+ 		foreach ( $this->mRequestedPageFields as $fieldName => &$fieldValues ) {
+ 			$fieldValues[$pageId] = $row->$fieldName;
+ 		}
++		return true;
+ 	}
+ 
+ 	/**
+@@ -836,8 +842,11 @@
+ 			foreach ( $res as $row ) {
+ 				$pageId = intval( $row->page_id );
+ 
++				// Store any extra fields requested by modules
++				$readable = $this->processDbRow( $row );
++
+ 				// Remove found page from the list of remaining items
+-				if ( isset( $remaining ) ) {
++				if ( $readable && isset( $remaining ) ) {
+ 					if ( $processTitles ) {
+ 						unset( $remaining[$row->page_namespace][$row->page_title] );
+ 					} else {
+@@ -845,9 +854,6 @@
+ 					}
+ 				}
+ 
+-				// Store any extra fields requested by modules
+-				$this->processDbRow( $row );
+-
+ 				// Need gender information
+ 				if ( MWNamespace::hasGenderDistinction( $row->page_namespace ) ) {
+ 					$usernames[] = $row->page_title;
+Only in html/includes/api: ApiPageSet.php.orig
+Only in html/includes/api: ApiPageSet.php.rej
+diff -r -u tmp/includes/api/ApiParse.php html/includes/api/ApiParse.php
+--- tmp/includes/api/ApiParse.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/api/ApiParse.php	2016-09-15 13:23:21.000000000 +0300
+@@ -115,6 +115,12 @@
+ 				}
+ 
+ 				$titleObj = $rev->getTitle();
++				// <IntraACL>
++				if ( !$titleObj->userCan( 'read' ) ) {
++					$this->dieUsage( "You are not allowed to read this article", 'permissiondenied' );
++				}
++				// </IntraACL>
++
+ 				$wgTitle = $titleObj;
+ 				$pageObj = WikiPage::factory( $titleObj );
+ 				$popts = $this->makeParserOptions( $pageObj, $params );
+@@ -203,6 +209,11 @@
+ 			if ( !$titleObj || $titleObj->isExternal() ) {
+ 				$this->dieUsageMsg( [ 'invalidtitle', $title ] );
+ 			}
++			// <IntraACL>
++			if ( !$titleObj->userCan( 'read' ) ) {
++				$this->dieUsage( "You are not allowed to read this article", 'permissiondenied' );
++			}
++			// </IntraACL>
+ 			$wgTitle = $titleObj;
+ 			if ( $titleObj->canExist() ) {
+ 				$pageObj = WikiPage::factory( $titleObj );
+Only in html/includes/api: ApiParse.php.orig
+Only in html/includes/api: ApiParse.php.rej
+diff -r -u tmp/includes/api/ApiQueryAllCategories.php html/includes/api/ApiQueryAllCategories.php
+--- tmp/includes/api/ApiQueryAllCategories.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/api/ApiQueryAllCategories.php	2016-09-15 13:23:21.000000000 +0300
+@@ -124,6 +124,11 @@
+ 
+ 			// Normalize titles
+ 			$titleObj = Title::makeTitle( NS_CATEGORY, $row->cat_title );
++			// <IntraACL>
++			if ( !$titleObj->userCan( 'read' ) ) {
++				continue;
++			}
++			// </IntraACL>
+ 			if ( !is_null( $resultPageSet ) ) {
+ 				$pages[] = $titleObj;
+ 			} else {
+Only in html/includes/api: ApiQueryAllCategories.php.rej
+Only in html/includes/api: ApiQueryAllImages.php.orig
+Only in html/includes/api: ApiQueryAllImages.php.rej
+diff -r -u tmp/includes/api/ApiQueryAllLinks.php html/includes/api/ApiQueryAllLinks.php
+--- tmp/includes/api/ApiQueryAllLinks.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/api/ApiQueryAllLinks.php	2016-09-15 13:23:21.000000000 +0300
+@@ -206,8 +206,13 @@
+ 				if ( $fld_ids ) {
+ 					$vals['fromid'] = intval( $row->pl_from );
+ 				}
++				$title = Title::makeTitle( $namespace, $row->pl_title );
++				// <IntraACL>
++				if ( !$title->userCan( 'read' ) ) {
++					continue;
++				}
++				// </IntraACL>
+ 				if ( $fld_title ) {
+-					$title = Title::makeTitle( $namespace, $row->pl_title );
+ 					ApiQueryBase::addTitleInfo( $vals, $title );
+ 				}
+ 				foreach ( $this->props as $name => $field ) {
+Only in html/includes/api: ApiQueryAllLinks.php.orig
+Only in html/includes/api: ApiQueryAllLinks.php.rej
+Only in html/includes/api: ApiQueryAllMessages.php.orig
+Only in html/includes/api: ApiQueryAllMessages.php.rej
+Only in html/includes/api: ApiQueryAllPages.php.orig
+Only in html/includes/api: ApiQueryAllPages.php.rej
+diff -r -u tmp/includes/api/ApiQueryBacklinks.php html/includes/api/ApiQueryBacklinks.php
+--- tmp/includes/api/ApiQueryBacklinks.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/api/ApiQueryBacklinks.php	2016-09-15 13:23:42.000000000 +0300
+@@ -186,6 +186,11 @@
+ 
+ 			$this->pageMap[$row->page_namespace][$row->page_title] = $row->page_id;
+ 			$t = Title::makeTitle( $row->page_namespace, $row->page_title );
++			// <IntraACL>
++			if ( !$t->userCan( 'read' ) ) {
++				continue;
++			}
++			// </IntraACL>
+ 			if ( $row->page_is_redirect ) {
+ 				$this->redirTitles[] = $t;
+ 			}
+@@ -309,9 +314,15 @@
+ 				$this->cont[] = $row->page_id;
+ 			}
+ 
++			$t = Title::makeTitle( $row->page_namespace, $row->page_title );
++			// <IntraACL>
++			if ( !$t->userCan( 'read' ) ) {
++				continue;
++			}
++			// </IntraACL>
+ 			if ( is_null( $resultPageSet ) ) {
+ 				$a['pageid'] = intval( $row->page_id );
+-				ApiQueryBase::addTitleInfo( $a, Title::makeTitle( $row->page_namespace, $row->page_title ) );
++				ApiQueryBase::addTitleInfo( $a, $t );
+ 				if ( $row->page_is_redirect ) {
+ 					$a['redirect'] = true;
+ 				}
+Only in html/includes/api: ApiQueryBacklinks.php.orig
+Only in html/includes/api: ApiQueryBacklinks.php.rej
+diff -r -u tmp/includes/api/ApiQueryCategories.php html/includes/api/ApiQueryCategories.php
+--- tmp/includes/api/ApiQueryCategories.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/api/ApiQueryCategories.php	2016-09-15 13:23:21.000000000 +0300
+@@ -73,7 +73,7 @@
+ 			$cats = [];
+ 			foreach ( $params['categories'] as $cat ) {
+ 				$title = Title::newFromText( $cat );
+-				if ( !$title || $title->getNamespace() != NS_CATEGORY ) {
++				if ( !$title || $title->getNamespace() != NS_CATEGORY || !$title->userCan( 'read' ) ) {
+ 					$this->setWarning( "\"$cat\" is not a category" );
+ 				} else {
+ 					$cats[] = $title->getDBkey();
+Only in html/includes/api: ApiQueryCategories.php.orig
+Only in html/includes/api: ApiQueryCategories.php.rej
+diff -r -u tmp/includes/api/ApiQueryCategoryMembers.php html/includes/api/ApiQueryCategoryMembers.php
+--- tmp/includes/api/ApiQueryCategoryMembers.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/api/ApiQueryCategoryMembers.php	2016-09-15 13:23:21.000000000 +0300
+@@ -249,8 +249,13 @@
+ 				if ( $fld_ids ) {
+ 					$vals['pageid'] = intval( $row->page_id );
+ 				}
++				$title = Title::makeTitle( $row->page_namespace, $row->page_title );
++				// <IntraACL>
++				if ( !$title->userCan( 'read' ) ) {
++					continue;
++				}
++				// </IntraACL>
+ 				if ( $fld_title ) {
+-					$title = Title::makeTitle( $row->page_namespace, $row->page_title );
+ 					ApiQueryBase::addTitleInfo( $vals, $title );
+ 				}
+ 				if ( $fld_sortkey ) {
+Only in html/includes/api: ApiQueryCategoryMembers.php.orig
+Only in html/includes/api: ApiQueryCategoryMembers.php.rej
+Only in html/includes/api: ApiQueryDeletedrevs.php.orig
+Only in html/includes/api: ApiQueryDeletedrevs.php.rej
+diff -r -u tmp/includes/api/ApiQueryExtLinksUsage.php html/includes/api/ApiQueryExtLinksUsage.php
+--- tmp/includes/api/ApiQueryExtLinksUsage.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/api/ApiQueryExtLinksUsage.php	2016-09-15 13:23:21.000000000 +0300
+@@ -121,8 +121,13 @@
+ 				if ( $fld_ids ) {
+ 					$vals['pageid'] = intval( $row->page_id );
+ 				}
++				$title = Title::makeTitle( $row->page_namespace, $row->page_title );
++				// <IntraACL>
++				if ( !$title->userCan( 'read' ) ) {
++					continue;
++				}
++				// </IntraACL>
+ 				if ( $fld_title ) {
+-					$title = Title::makeTitle( $row->page_namespace, $row->page_title );
+ 					ApiQueryBase::addTitleInfo( $vals, $title );
+ 				}
+ 				if ( $fld_url ) {
+Only in html/includes/api: ApiQueryExtLinksUsage.php.orig
+Only in html/includes/api: ApiQueryExtLinksUsage.php.rej
+diff -r -u tmp/includes/api/ApiQueryFilearchive.php html/includes/api/ApiQueryFilearchive.php
+--- tmp/includes/api/ApiQueryFilearchive.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/api/ApiQueryFilearchive.php	2016-09-15 13:23:21.000000000 +0300
+@@ -165,6 +165,11 @@
+ 			$file['id'] = (int)$row->fa_id;
+ 			$file['name'] = $row->fa_name;
+ 			$title = Title::makeTitle( NS_FILE, $row->fa_name );
++			// <IntraACL>
++			if ( !$title->userCan( 'read' ) ) {
++				continue;
++			}
++			// </IntraACL>
+ 			self::addTitleInfo( $file, $title );
+ 
+ 			if ( $fld_description &&
+Only in html/includes/api: ApiQueryFilearchive.php.orig
+Only in html/includes/api: ApiQueryFilearchive.php.rej
+diff -r -u tmp/includes/api/ApiQueryImages.php html/includes/api/ApiQueryImages.php
+--- tmp/includes/api/ApiQueryImages.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/api/ApiQueryImages.php	2016-09-15 13:23:21.000000000 +0300
+@@ -89,7 +89,7 @@
+ 			$images = [];
+ 			foreach ( $params['images'] as $img ) {
+ 				$title = Title::newFromText( $img );
+-				if ( !$title || $title->getNamespace() != NS_FILE ) {
++				if ( !$title || $title->getNamespace() != NS_FILE || !$title->userCan( 'read' ) ) {
+ 					$this->setWarning( "\"$img\" is not a file" );
+ 				} else {
+ 					$images[] = $title->getDBkey();
+Only in html/includes/api: ApiQueryImages.php.orig
+Only in html/includes/api: ApiQueryImages.php.rej
+diff -r -u tmp/includes/api/ApiQueryInfo.php html/includes/api/ApiQueryInfo.php
+--- tmp/includes/api/ApiQueryInfo.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/api/ApiQueryInfo.php	2016-09-15 13:23:21.000000000 +0300
+@@ -324,14 +324,20 @@
+ 			$cont = explode( '|', $this->params['continue'] );
+ 			$this->dieContinueUsageIf( count( $cont ) != 2 );
+ 			$conttitle = Title::makeTitleSafe( $cont[0], $cont[1] );
+-			foreach ( $this->everything as $pageid => $title ) {
+-				if ( Title::compare( $title, $conttitle ) >= 0 ) {
+-					break;
++			// <IntraACL>
++			if ( $conttitle && $conttitle->userCan( 'read' ) ) {
++			// </IntraACL>
++				foreach ( $this->everything as $pageid => $title ) {
++					if ( Title::compare( $title, $conttitle ) >= 0 ) {
++						break;
++					}
++					unset( $this->titles[$pageid] );
++					unset( $this->missing[$pageid] );
++					unset( $this->everything[$pageid] );
+ 				}
+-				unset( $this->titles[$pageid] );
+-				unset( $this->missing[$pageid] );
+-				unset( $this->everything[$pageid] );
++			// <IntraACL>
+ 			}
++			// </IntraACL>
+ 		}
+ 
+ 		$this->pageRestrictions = $pageSet->getCustomField( 'page_restrictions' );
+Only in html/includes/api: ApiQueryInfo.php.orig
+Only in html/includes/api: ApiQueryInfo.php.rej
+diff -r -u tmp/includes/api/ApiQueryIWBacklinks.php html/includes/api/ApiQueryIWBacklinks.php
+--- tmp/includes/api/ApiQueryIWBacklinks.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/api/ApiQueryIWBacklinks.php	2016-09-15 13:23:21.000000000 +0300
+@@ -129,6 +129,11 @@
+ 				$entry = [ 'pageid' => $row->page_id ];
+ 
+ 				$title = Title::makeTitle( $row->page_namespace, $row->page_title );
++				// <IntraACL>
++				if ( !$title->userCan( 'read' ) ) {
++					continue;
++				}
++				// </IntraACL>
+ 				ApiQueryBase::addTitleInfo( $entry, $title );
+ 
+ 				if ( $row->page_is_redirect ) {
+Only in html/includes/api: ApiQueryIWBacklinks.php.orig
+Only in html/includes/api: ApiQueryIWBacklinks.php.rej
+diff -r -u tmp/includes/api/ApiQueryLangBacklinks.php html/includes/api/ApiQueryLangBacklinks.php
+--- tmp/includes/api/ApiQueryLangBacklinks.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/api/ApiQueryLangBacklinks.php	2016-09-15 13:23:21.000000000 +0300
+@@ -128,6 +128,11 @@
+ 				$entry = [ 'pageid' => $row->page_id ];
+ 
+ 				$title = Title::makeTitle( $row->page_namespace, $row->page_title );
++				// <IntraACL>
++				if ( !$title->userCan( 'read' ) ) {
++					continue;
++				}
++				// </IntraACL>
+ 				ApiQueryBase::addTitleInfo( $entry, $title );
+ 
+ 				if ( $row->page_is_redirect ) {
+Only in html/includes/api: ApiQueryLangBacklinks.php.orig
+Only in html/includes/api: ApiQueryLangBacklinks.php.rej
+diff -r -u tmp/includes/api/ApiQueryLinks.php html/includes/api/ApiQueryLinks.php
+--- tmp/includes/api/ApiQueryLinks.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/api/ApiQueryLinks.php	2016-09-15 13:23:21.000000000 +0300
+@@ -93,7 +93,7 @@
+ 			$lb = new LinkBatch;
+ 			foreach ( $params[$this->titlesParam] as $t ) {
+ 				$title = Title::newFromText( $t );
+-				if ( !$title ) {
++				if ( !$title || !$title->userCan( 'read' ) ) {
+ 					$this->setWarning( "\"$t\" is not a valid title" );
+ 				} else {
+ 					$lb->addObj( $title );
+Only in html/includes/api: ApiQueryLinks.php.orig
+Only in html/includes/api: ApiQueryLinks.php.rej
+diff -r -u tmp/includes/api/ApiQueryLogEvents.php html/includes/api/ApiQueryLogEvents.php
+--- tmp/includes/api/ApiQueryLogEvents.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/api/ApiQueryLogEvents.php	2016-09-15 13:23:21.000000000 +0300
+@@ -172,7 +172,9 @@
+ 		$title = $params['title'];
+ 		if ( !is_null( $title ) ) {
+ 			$titleObj = Title::newFromText( $title );
+-			if ( is_null( $titleObj ) ) {
++			// <IntraACL>
++			if ( is_null( $titleObj ) || !$titleObj->userCan( 'read' ) ) {
++			// </IntraACL>
+ 				$this->dieUsage( "Bad title value '$title'", 'param_title' );
+ 			}
+ 			$this->addWhereFld( 'log_namespace', $titleObj->getNamespace() );
+@@ -277,9 +279,12 @@
+ 			$vals['logid'] = intval( $row->log_id );
+ 		}
+ 
+-		if ( $this->fld_title || $this->fld_parsedcomment ) {
+-			$title = Title::makeTitle( $row->log_namespace, $row->log_title );
++		$title = Title::makeTitle( $row->log_namespace, $row->log_title );
++		// <IntraACL>
++		if ( !$title->userCan( 'read' ) ) {
++			return false;
+ 		}
++		// </IntraACL>
+ 
+ 		if ( $this->fld_title || $this->fld_ids || $this->fld_details && $row->log_params !== '' ) {
+ 			if ( LogEventsList::isDeleted( $row, LogPage::DELETED_ACTION ) ) {
+Only in html/includes/api: ApiQueryLogEvents.php.orig
+Only in html/includes/api: ApiQueryLogEvents.php.rej
+diff -r -u tmp/includes/api/ApiQueryPagesWithProp.php html/includes/api/ApiQueryPagesWithProp.php
+--- tmp/includes/api/ApiQueryPagesWithProp.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/api/ApiQueryPagesWithProp.php	2016-09-15 13:23:43.000000000 +0300
+@@ -105,8 +105,13 @@
+ 				if ( $fld_ids ) {
+ 					$vals['pageid'] = (int)$row->page_id;
+ 				}
++				$title = Title::makeTitle( $row->page_namespace, $row->page_title );
++				// <IntraACL>
++				if ( !$title->userCan( 'read' ) ) {
++					continue;
++				}
++				// </IntraACL>
+ 				if ( $fld_title ) {
+-					$title = Title::makeTitle( $row->page_namespace, $row->page_title );
+ 					ApiQueryBase::addTitleInfo( $vals, $title );
+ 				}
+ 				if ( $fld_value ) {
+Only in html/includes/api: ApiQueryPagesWithProp.php.orig
+Only in html/includes/api: ApiQueryPagesWithProp.php.rej
+Only in html/includes/api: ApiQueryProtectedTitles.php.orig
+Only in html/includes/api: ApiQueryProtectedTitles.php.rej
+Only in html/includes/api: ApiQueryQueryPage.php.orig
+Only in html/includes/api: ApiQueryQueryPage.php.rej
+Only in html/includes/api: ApiQueryRandom.php.orig
+Only in html/includes/api: ApiQueryRandom.php.rej
+diff -r -u tmp/includes/api/ApiQueryRecentChanges.php html/includes/api/ApiQueryRecentChanges.php
+--- tmp/includes/api/ApiQueryRecentChanges.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/api/ApiQueryRecentChanges.php	2016-09-15 13:23:21.000000000 +0300
+@@ -422,6 +422,11 @@
+ 	public function extractRowInfo( $row ) {
+ 		/* Determine the title of the page that has been changed. */
+ 		$title = Title::makeTitle( $row->rc_namespace, $row->rc_title );
++		// <IntraACL>
++		if ( !$title->userCan( 'read' ) ) {
++			return false;
++		}
++		// </IntraACL>
+ 		$user = $this->getUser();
+ 
+ 		/* Our output data. */
+Only in html/includes/api: ApiQueryRecentChanges.php.orig
+Only in html/includes/api: ApiQueryRecentChanges.php.rej
+diff -r -u tmp/includes/api/ApiQueryRevisionsBase.php html/includes/api/ApiQueryRevisionsBase.php
+--- tmp/includes/api/ApiQueryRevisionsBase.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/api/ApiQueryRevisionsBase.php	2016-09-15 13:23:43.000000000 +0300
+@@ -159,6 +159,11 @@
+ 	 */
+ 	protected function extractRevisionInfo( Revision $revision, $row ) {
+ 		$title = $revision->getTitle();
++		// <IntraACL>
++		if ( !$title->userCan( 'read' ) ) {
++			return NULL;
++		}
++		// </IntraACL>
+ 		$user = $this->getUser();
+ 		$vals = [];
+ 		$anyHidden = false;
+Only in html/includes/api: ApiQueryRevisionsBase.php.orig
+Only in html/includes/api: ApiQueryRevisionsBase.php.rej
+Only in html/includes/api: ApiQuerySearch.php.orig
+Only in html/includes/api: ApiQuerySearch.php.rej
+diff -r -u tmp/includes/api/ApiQueryUserContributions.php html/includes/api/ApiQueryUserContributions.php
+--- tmp/includes/api/ApiQueryUserContributions.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/api/ApiQueryUserContributions.php	2016-09-15 13:23:21.000000000 +0300
+@@ -356,6 +356,11 @@
+ 		}
+ 
+ 		$title = Title::makeTitle( $row->page_namespace, $row->page_title );
++		// <IntraACL>
++		if ( !$title || !$title->userCan( 'read' ) ) {
++			return false;
++		}
++		// </IntraACL>
+ 
+ 		if ( $this->fld_title ) {
+ 			ApiQueryBase::addTitleInfo( $vals, $title );
+Only in html/includes/api: ApiQueryUserContributions.php.orig
+Only in html/includes/api: ApiQueryUserContributions.php.rej
+diff -r -u tmp/includes/api/ApiQueryWatchlist.php html/includes/api/ApiQueryWatchlist.php
+--- tmp/includes/api/ApiQueryWatchlist.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/api/ApiQueryWatchlist.php	2016-09-15 13:23:21.000000000 +0300
+@@ -298,6 +298,11 @@
+ 	private function extractRowInfo( $row ) {
+ 		/* Determine the title of the page that has been changed. */
+ 		$title = Title::makeTitle( $row->rc_namespace, $row->rc_title );
++		// <IntraACL>
++		if ( !$title || !$title->userCan( 'read' ) ) {
++			return false;
++		}
++		// </IntraACL>
+ 		$user = $this->getUser();
+ 
+ 		/* Our output data. */
+Only in html/includes/api: ApiQueryWatchlist.php.orig
+Only in html/includes/api: ApiQueryWatchlist.php.rej
+Only in html/includes/api: ApiQueryWatchlistRaw.php.orig
+Only in html/includes/api: ApiQueryWatchlistRaw.php.rej
+diff -r -u tmp/includes/cache/LinkBatch.php html/includes/cache/LinkBatch.php
+--- tmp/includes/cache/LinkBatch.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/cache/LinkBatch.php	2016-09-15 13:23:52.000000000 +0300
+@@ -150,6 +150,11 @@
+ 		if ( !$res ) {
+ 			return [];
+ 		}
++		// <IntraACL>
++		if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++			$etc = haclfDisableTitlePatch();
++		}
++		// </IntraACL>
+ 
+ 		// For each returned entry, add it to the list of good links, and remove it from $remaining
+ 
+@@ -161,6 +166,11 @@
+ 			$ids[$title->getPrefixedDBkey()] = $row->page_id;
+ 			unset( $remaining[$row->page_namespace][$row->page_title] );
+ 		}
++		// <IntraACL>
++		if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++			$etc = haclfDisableTitlePatch();
++		}
++		// </IntraACL>
+ 
+ 		// The remaining links in $data are bad links, register them as such
+ 		foreach ( $remaining as $ns => $dbkeys ) {
+@@ -170,7 +180,17 @@
+ 				$ids[$title->getPrefixedDBkey()] = 0;
+ 			}
+ 		}
++		// <IntraACL>
++		if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++			$etc = haclfDisableTitlePatch();
++		}
++		// </IntraACL>
+ 
++		// <IntraACL>
++		if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++			haclfRestoreTitlePatch( $etc );
++		}
++		// </IntraACL>
+ 		return $ids;
+ 	}
+ 
+Only in html/includes/cache: LinkBatch.php.orig
+Only in html/includes/cache: LinkBatch.php.rej
+diff -r -u tmp/includes/CategoryViewer.php html/includes/CategoryViewer.php
+--- tmp/includes/CategoryViewer.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/CategoryViewer.php	2016-09-15 13:23:21.000000000 +0300
+@@ -262,6 +262,11 @@
+ 	 * @param bool $isRedirect
+ 	 */
+ 	function addPage( $title, $sortkey, $pageLength, $isRedirect = false ) {
++		// <IntraACL>
++		if ( !$title->userCan( 'read' ) ) {
++			return;
++		}
++		// </IntraACL>
+ 		global $wgContLang;
+ 
+ 		$this->articles[] = $this->generateLink( 'page', $title, $isRedirect );
+Only in html/includes: CategoryViewer.php.orig
+Only in html/includes: CategoryViewer.php.rej
+diff -r -u tmp/includes/changes/ChangesFeed.php html/includes/changes/ChangesFeed.php
+--- tmp/includes/changes/ChangesFeed.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/changes/ChangesFeed.php	2016-09-15 13:23:21.000000000 +0300
+@@ -206,6 +206,11 @@
+ 
+ 		foreach ( $sorted as $obj ) {
+ 			$title = Title::makeTitle( $obj->rc_namespace, $obj->rc_title );
++			// <IntraACL>
++			if ( !$title->userCan( 'read' ) ) {
++				continue;
++			}
++			// </IntraACL>
+ 			$talkpage = MWNamespace::canTalk( $obj->rc_namespace )
+ 				? $title->getTalkPage()->getFullURL()
+ 				: '';
+Only in html/includes/changes: ChangesFeed.php.orig
+Only in html/includes/changes: ChangesFeed.php.rej
+diff -r -u tmp/includes/diff/DifferenceEngine.php html/includes/diff/DifferenceEngine.php
+--- tmp/includes/diff/DifferenceEngine.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/diff/DifferenceEngine.php	2016-09-15 13:23:21.000000000 +0300
+@@ -1290,6 +1290,13 @@
+ 			return false;
+ 		}
+ 
++		// <IntraACL>
++		if ( !$this->mNewRev->getTitle()->userCan( 'read' ) ) {
++			$this->mNewRev = false;
++			return false;
++		}
++		// </IntraACL>
++
+ 		// Update the new revision ID in case it was 0 (makes life easier doing UI stuff)
+ 		$this->mNewid = $this->mNewRev->getId();
+ 		$this->mNewPage = $this->mNewRev->getTitle();
+@@ -1316,6 +1323,13 @@
+ 
+ 		if ( $this->mOldRev ) {
+ 			$this->mOldPage = $this->mOldRev->getTitle();
++			// <IntraACL>
++			if ( !$this->mOldRev->getTitle()->userCan( 'read' ) ) {
++				$this->mOldid = false;
++				$this->mOldRev = false;
++				return false;
++			}
++			// </IntraACL>
+ 		}
+ 
+ 		// Load tags information for both revisions
+Only in html/includes/diff: DifferenceEngine.php.orig
+Only in html/includes/diff: DifferenceEngine.php.rej
+diff -r -u tmp/includes/FeedUtils.php html/includes/FeedUtils.php
+--- tmp/includes/FeedUtils.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/FeedUtils.php	2016-09-15 13:23:21.000000000 +0300
+@@ -115,11 +115,9 @@
+ 					$actiontext,
+ 					Linker::formatComment( $comment ) ] ) ) . "</p>\n";
+ 
+-		// NOTE: Check permissions for anonymous users, not current user.
+-		//       No "privileged" version should end up in the cache.
+-		//       Most feed readers will not log in anyway.
+-		$anon = new User();
+-		$accErrors = $title->getUserPermissionsErrors( 'read', $anon, true );
++		// NOTE: Check permissions for current user. -- IntraACL
++		global $wgUser;
++		$accErrors = $title->getUserPermissionsErrors( 'read', $wgUser, true );
+ 
+ 		// Can't diff special pages, unreadable pages or pages with no new revision
+ 		// to compare against: just return the text.
+Only in html/includes: FeedUtils.php.orig
+Only in html/includes: FeedUtils.php.rej
+diff -r -u tmp/includes/filerepo/file/LocalFile.php html/includes/filerepo/file/LocalFile.php
+--- tmp/includes/filerepo/file/LocalFile.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/filerepo/file/LocalFile.php	2016-09-15 13:23:21.000000000 +0300
+@@ -154,6 +154,11 @@
+ 	 */
+ 	static function newFromRow( $row, $repo ) {
+ 		$title = Title::makeTitle( NS_FILE, $row->img_name );
++		// <IntraACL>
++		if ( !$title->userCan( 'read' ) ) {
++			return NULL;
++		}
++		// </IntraACL>
+ 		$file = new self( $title, $repo );
+ 		$file->loadFromRow( $row );
+ 
+Only in html/includes/filerepo/file: LocalFile.php.orig
+Only in html/includes/filerepo/file: LocalFile.php.rej
+diff -r -u tmp/includes/filerepo/LocalRepo.php html/includes/filerepo/LocalRepo.php
+--- tmp/includes/filerepo/LocalRepo.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/filerepo/LocalRepo.php	2016-09-15 13:23:21.000000000 +0300
+@@ -383,7 +383,12 @@
+ 
+ 		$result = [];
+ 		foreach ( $res as $row ) {
+-			$result[] = $this->newFileFromRow( $row );
++			$file = $this->newFileFromRow( $row );
++			// <IntraACL>
++			if ( $file !== NULL ) {
++				$result[] = $file;
++			}
++			// </IntraACL>
+ 		}
+ 		$res->free();
+ 
+@@ -416,7 +421,11 @@
+ 		$result = [];
+ 		foreach ( $res as $row ) {
+ 			$file = $this->newFileFromRow( $row );
+-			$result[$file->getSha1()][] = $file;
++			// <IntraACL>
++			if ( $file !== NULL ) {
++				$result[$file->getSha1()][] = $file;
++			}
++			// </IntraACL>
+ 		}
+ 		$res->free();
+ 
+@@ -446,7 +455,12 @@
+ 		// Build file objects
+ 		$files = [];
+ 		foreach ( $res as $row ) {
+-			$files[] = $this->newFileFromRow( $row );
++			$file = $this->newFileFromRow( $row );
++			// <IntraACL>
++			if ( $file !== NULL ) {
++				$files[] = $file;
++			}
++			// </IntraACL>
+ 		}
+ 
+ 		return $files;
+Only in html/includes/filerepo: LocalRepo.php.orig
+Only in html/includes/filerepo: LocalRepo.php.rej
+Only in html/includes: GlobalFunctions.php.orig
+Only in html/includes: GlobalFunctions.php.rej
+diff -r -u tmp/includes/Linker.php html/includes/Linker.php
+--- tmp/includes/Linker.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/Linker.php	2016-09-15 13:23:21.000000000 +0300
+@@ -2096,6 +2096,10 @@
+ 						[],
+ 						[ 'action' => 'edit' ]
+ 					);
++				// <IntraACL>
++				} elseif ( !$titleObj->userCan( 'read' ) ) {
++					continue;
++				// </IntraACL>
+ 				} else {
+ 					$editLink = self::link(
+ 						$titleObj,
+Only in html/includes: Linker.php.orig
+Only in html/includes: Linker.php.rej
+diff -r -u tmp/includes/logging/LogEventsList.php html/includes/logging/LogEventsList.php
+--- tmp/includes/logging/LogEventsList.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/logging/LogEventsList.php	2016-09-15 13:23:21.000000000 +0300
+@@ -353,6 +353,11 @@
+ 	 */
+ 	public function logLine( $row ) {
+ 		$entry = DatabaseLogEntry::newFromRow( $row );
++		// <IntraACL>
++		if ( !$entry->getTarget()->userCan( 'read' ) ) {
++			return '';
++		}
++		// </IntraACL>
+ 		$formatter = LogFormatter::newFromEntry( $entry );
+ 		$formatter->setContext( $this->getContext() );
+ 		$formatter->setShowUserToolLinks( !( $this->flags & self::NO_EXTRA_USER_LINKS ) );
+Only in html/includes/logging: LogEventsList.php.orig
+Only in html/includes/logging: LogEventsList.php.rej
+diff -r -u tmp/includes/mail/EmailNotification.php html/includes/mail/EmailNotification.php
+--- tmp/includes/mail/EmailNotification.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/mail/EmailNotification.php	2016-09-15 13:23:53.000000000 +0300
+@@ -236,6 +236,9 @@
+ 						&& $watchingUser->getId() != $userTalkId
+ 						&& !in_array( $watchingUser->getName(), $wgUsersNotifiedOnAllChanges )
+ 						&& !( $wgBlockDisablesLogin && $watchingUser->isBlocked() )
++// <IntraACL>
++						&& !$title->getUserPermissionsErrors( 'read', $watchingUser ) // Check page read access
++// </IntraACL>
+ 					) {
+ 						if ( Hooks::run( 'SendWatchlistEmailNotification', [ $watchingUser, $title, $this ] ) ) {
+ 							$this->compose( $watchingUser, self::WATCHLIST );
+@@ -251,7 +254,12 @@
+ 				continue;
+ 			}
+ 			$user = User::newFromName( $name );
+-			$this->compose( $user, self::ALL_CHANGES );
++// <IntraACL>
++			if ( !$title->getUserPermissionsErrors( 'read', $user ) ) {
++				// Check page read access
++				$this->compose( $user, self::ALL_CHANGES );
++			}
++// </IntraACL>
+ 		}
+ 
+ 		$this->sendMails();
+Only in html/includes/mail: EmailNotification.php.orig
+Only in html/includes/mail: EmailNotification.php.rej
+diff -r -u tmp/includes/OutputPage.php html/includes/OutputPage.php
+--- tmp/includes/OutputPage.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/OutputPage.php	2016-09-15 13:23:21.000000000 +0300
+@@ -1316,6 +1316,12 @@
+ 			'OutputPageMakeCategoryLinks',
+ 			[ &$this, $categories, &$this->mCategoryLinks ] )
+ 		) {
++// <IntraACL>
++            // Do not cloak category links during display
++            if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++                    $etc = haclfDisableTitlePatch();
++            }
++// </IntraACL>
+ 			foreach ( $categories as $category => $type ) {
+ 				// array keys will cast numeric category names to ints, so cast back to string
+ 				$category = (string)$category;
+@@ -1332,6 +1338,11 @@
+ 				$this->mCategories[] = $title->getText();
+ 				$this->mCategoryLinks[$type][] = Linker::link( $title, $text );
+ 			}
++			// <IntraACL>
++			if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++				haclfRestoreTitlePatch( $etc );
++			}
++			// </IntraACL>
+ 		}
+ 	}
+ 
+@@ -2636,7 +2647,9 @@
+ 		} else {
+ 			$titleObj = Title::newFromText( $returnto );
+ 		}
+-		if ( !is_object( $titleObj ) ) {
++		// <IntraACL>
++		if ( !$titleObj instanceof Title || !$titleObj->userCan( 'read' ) ) {
++		// </IntraACL>
+ 			$titleObj = Title::newMainPage();
+ 		}
+ 
+Only in html/includes: OutputPage.php.orig
+Only in html/includes: OutputPage.php.rej
+diff -r -u tmp/includes/parser/LinkHolderArray.php html/includes/parser/LinkHolderArray.php
+--- tmp/includes/parser/LinkHolderArray.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/parser/LinkHolderArray.php	2016-09-15 13:23:21.000000000 +0300
+@@ -80,6 +80,12 @@
+ 	 * Recreate the Title objects
+ 	 */
+ 	public function __wakeup() {
++// <IntraACL>
++        // LinkHolderArray skips permission checks so page links in parsed content are never cloaked
++        if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++                $etc = haclfDisableTitlePatch();
++        }
++// </IntraACL>
+ 		foreach ( $this->internals as &$nsLinks ) {
+ 			foreach ( $nsLinks as &$entry ) {
+ 				$entry['title'] = Title::newFromText( $entry['pdbk'] );
+@@ -92,6 +98,11 @@
+ 			$entry['title'] = Title::newFromText( $entry['pdbk'] );
+ 		}
+ 		unset( $entry );
++		// <IntraACL>
++		if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++			haclfRestoreTitlePatch( $etc );
++		}
++		// </IntraACL>
+ 	}
+ 
+ 	/**
+Only in html/includes/parser: LinkHolderArray.php.orig
+Only in html/includes/parser: LinkHolderArray.php.rej
+diff -r -u tmp/includes/parser/ParserCache.php html/includes/parser/ParserCache.php
+--- tmp/includes/parser/ParserCache.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/parser/ParserCache.php	2016-09-15 13:23:21.000000000 +0300
+@@ -67,6 +67,9 @@
+ 		$pageid = $article->getId();
+ 		$renderkey = (int)( $wgRequest->getVal( 'action' ) == 'render' );
+ 
++		// Needed for IntraACL >= 2.03 to modify parser cache key for correct permissions
++		wfRunHooks( 'ParserOutputRenderKey', array( $article, &$renderkey ) );
++
+ 		$key = wfMemcKey( 'pcache', 'idhash', "{$pageid}-{$renderkey}!{$hash}" );
+ 		return $key;
+ 	}
+Only in html/includes/parser: ParserCache.php.orig
+Only in html/includes/parser: ParserCache.php.rej
+diff -r -u tmp/includes/parser/Parser.php html/includes/parser/Parser.php
+--- tmp/includes/parser/Parser.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/parser/Parser.php	2016-09-15 18:02:38.000000000 +0300
+@@ -2186,7 +2186,19 @@
+ 			}
+ 
+ 			$unstrip = $this->mStripState->unstripNoWiki( $link );
++			// <IntraACL>
++			// Do not check permissions for links, except image links
++			if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++				$etc = haclfDisableTitlePatch();
++			}
++			// </IntraACL>
+ 			$nt = is_string( $unstrip ) ? Title::newFromText( $unstrip ) : null;
++			$nt = Title::newFromText( $this->mStripState->unstripNoWiki( $link ) );
++			// <IntraACL>
++			if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++				haclfRestoreTitlePatch( $etc );
++			}
++			// </IntraACL>
+ 			if ( $nt === null ) {
+ 				$s .= $prefix . '[[' . $line;
+ 				continue;
+@@ -2268,7 +2280,10 @@
+ 				}
+ 
+ 				if ( $ns == NS_FILE ) {
+-					if ( !wfIsBadImage( $nt->getDBkey(), $this->mTitle ) ) {
++					// <IntraACL>
++					if ( !wfIsBadImage( $nt->getDBkey(), $this->mTitle ) &&
++						( $canRead = $nt->userCan( 'read' ) ) ) {
++					// </IntraACL>
+ 						if ( $wasblank ) {
+ 							# if no parameters were passed, $text
+ 							# becomes something like "File:Foo.png",
+@@ -2285,6 +2300,13 @@
+ 						# cloak any absolute URLs inside the image markup, so replaceExternalLinks() won't touch them
+ 						$s .= $prefix . $this->armorLinks(
+ 							$this->makeImage( $nt, $text, $holders ) ) . $trail;
++					// <IntraACL>
++					} elseif ( !$canRead ) {
++						# Still register dependency on a nonreadable image
++						$time = $sha1 = $descQuery = false;
++						list( $file, $nt ) = $this->fetchFileAndTitle( $nt, $time, $sha1 );
++						$s .= $prefix . $trail;
++					// </IntraACL>
+ 					} else {
+ 						$s .= $prefix . $trail;
+ 					}
+@@ -3572,7 +3594,18 @@
+ 				$part1 = $relative;
+ 				$ns = $this->mTitle->getNamespace();
+ 			}
++			// <IntraACL>
++			// Template access check is done below, after loading
++			if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++				$etc = haclfDisableTitlePatch();
++			}
++			// </IntraACL>
+ 			$title = Title::newFromText( $part1, $ns );
++			// <IntraACL>
++			if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++				haclfRestoreTitlePatch( $etc );
++			}
++			// </IntraACL>
+ 			if ( $title ) {
+ 				$titleText = $title->getPrefixedText();
+ 				# Check for language variants if the template is not found
+@@ -3632,11 +3665,25 @@
+ 					wfDebug( __METHOD__ . ": template inclusion denied for " .
+ 						$title->getPrefixedDBkey() . "\n" );
+ 				} else {
+-					list( $text, $title ) = $this->getTemplateDom( $title );
++					list( $text, $title, $canRead ) = $this->getTemplateDom( $title );
+ 					if ( $text !== false ) {
+ 						$found = true;
+ 						$isChildObj = true;
+ 					}
++					// <IntraACL>
++					if ( $text !== false && !$canRead ) {
++						// Expand templates to always get correct templatelinks,
++						// even if current user has no access to some templates
++						global $haclgInclusionDeniedMessage;
++						$this->getPreprocessor()->newFrame()->expand( $text, 0 );
++						if ( $haclgInclusionDeniedMessage ) {
++							$text = wfMessage( $haclgInclusionDeniedMessage )->text() ;
++						} elseif ( $haclgInclusionDeniedMessage === '' ) {
++							$text = '';
++						}
++						$isChildObj = false;
++					}
++					// </IntraACL>
+ 				}
+ 
+ 				# If the title is valid but undisplayable, make a link to it
+@@ -3869,26 +3916,30 @@
+ 			$titleText = $title->getPrefixedDBkey();
+ 		}
+ 		if ( isset( $this->mTplDomCache[$titleText] ) ) {
+-			return [ $this->mTplDomCache[$titleText], $title ];
++                	$dom = $this->mTplDomCache[$titleText];
++			        if ( !$dom ) {
++		                return array( false, $title, true );
++			        }
++		                return array( $dom[0], $title, $dom[1] );
+ 		}
+ 
+ 		# Cache miss, go to the database
+-		list( $text, $title ) = $this->fetchTemplateAndTitle( $title );
++                list( $text, $title, $canRead ) = $this->fetchTemplateAndTitle( $title );
+ 
+ 		if ( $text === false ) {
+ 			$this->mTplDomCache[$titleText] = false;
+-			return [ false, $title ];
++			return array( false, $title, $canRead );
+ 		}
+ 
+ 		$dom = $this->preprocessToDom( $text, self::PTD_FOR_INCLUSION );
+-		$this->mTplDomCache[$titleText] = $dom;
++                $this->mTplDomCache[$titleText] = array($dom, $canRead);
+ 
+ 		if ( !$title->equals( $cacheTitle ) ) {
+ 			$this->mTplRedirCache[$cacheTitle->getPrefixedDBkey()] =
+ 				[ $title->getNamespace(), $cdb = $title->getDBkey() ];
+ 		}
+ 
+-		return [ $dom, $title ];
++		return array( $dom, $title, $canRead );
+ 	}
+ 
+ 	/**
+@@ -3932,7 +3983,7 @@
+ 	/**
+ 	 * Fetch the unparsed text of a template and register a reference to it.
+ 	 * @param Title $title
+-	 * @return array ( string or false, Title )
++	 * @return array ( string or false, Title, boolean )
+ 	 */
+ 	public function fetchTemplateAndTitle( $title ) {
+ 		// Defaults to Parser::statelessFetchTemplate()
+@@ -3954,7 +4005,7 @@
+ 				}
+ 			}
+ 		}
+-		return [ $text, $finalTitle ];
++		return array( $text, $finalTitle, $stuff['canRead'] );
+ 	}
+ 
+ 	/**
+@@ -3979,6 +4030,7 @@
+ 		$text = $skip = false;
+ 		$finalTitle = $title;
+ 		$deps = [];
++                $canRead = true;
+ 
+ 		# Loop to fetch the article, with up to 1 redirect
+ 		// @codingStandardsIgnoreStart Generic.CodeAnalysis.ForLoopWithTestFunctionCall.NotAllowed
+@@ -3989,6 +4041,7 @@
+ 			Hooks::run( 'BeforeParserFetchTemplateAndtitle',
+ 				[ $parser, $title, &$skip, &$id ] );
+ 
++			$canRead = $canRead && $title->userCan( 'read' );
+ 			if ( $skip ) {
+ 				$text = false;
+ 				$deps[] = [
+@@ -3998,6 +4051,11 @@
+ 				];
+ 				break;
+ 			}
++			// <IntraACL>
++			if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++				$etc = haclfDisableTitlePatch();
++			}
++			// </IntraACL>
+ 			# Get the revision
+ 			if ( $id ) {
+ 				$rev = Revision::newFromId( $id );
+@@ -4007,6 +4065,11 @@
+ 				$rev = Revision::newFromTitle( $title );
+ 			}
+ 			$rev_id = $rev ? $rev->getId() : 0;
++			// <IntraACL>
++			if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++				haclfRestoreTitlePatch( $etc );
++			}
++			// </IntraACL>
+ 			# If there is no current revision, there is no page
+ 			if ( $id === false && !$rev ) {
+ 				$linkCache = LinkCache::singleton();
+@@ -4050,9 +4113,20 @@
+ 			}
+ 			# Redirect?
+ 			$finalTitle = $title;
++                        // <IntraACL>
++                        if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++                        $etc = haclfDisableTitlePatch();
++                        }
++                        // </IntraACL>
+ 			$title = $content->getRedirectTarget();
++                        // <IntraACL>
++                        if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++                                haclfRestoreTitlePatch( $etc );
++                        }
++                        // </IntraACL>
+ 		}
+ 		return [
++                        'canRead' => $canRead,
+ 			'text' => $text,
+ 			'finalTitle' => $finalTitle,
+ 			'deps' => $deps ];
+Only in html/includes/parser: Parser.php.orig
+Only in html/includes/parser: Parser.php.rej
+diff -r -u tmp/includes/specialpage/QueryPage.php html/includes/specialpage/QueryPage.php
+--- tmp/includes/specialpage/QueryPage.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/specialpage/QueryPage.php	2016-09-15 13:23:21.000000000 +0300
+@@ -679,6 +679,12 @@
+ 			# $num [should update this to use a Pager]
+ 			// @codingStandardsIgnoreStart Generic.CodeAnalysis.ForLoopWithTestFunctionCall.NotAllowed
+ 			for ( $i = 0; $i < $num && $row = $res->fetchObject(); $i++ ) {
++// <IntraACL>
++                $title = Title::makeTitleSafe( $row->namespace, $row->title );
++                if ( !$title || !$title->userCan( 'read' ) ) {
++                    continue;
++                }
++// </IntraACL>
+ 				// @codingStandardsIgnoreEnd
+ 				$line = $this->formatResult( $skin, $row );
+ 				if ( $line ) {
+Only in html/includes/specialpage: QueryPage.php.orig
+Only in html/includes/specialpage: QueryPage.php.rej
+diff -r -u tmp/includes/specials/SpecialAllPages.php html/includes/specials/SpecialAllPages.php
+--- tmp/includes/specials/SpecialAllPages.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/specials/SpecialAllPages.php	2016-09-15 13:23:21.000000000 +0300
+@@ -209,6 +209,11 @@
+ 
+ 				while ( ( $n < $this->maxPerPage ) && ( $s = $res->fetchObject() ) ) {
+ 					$t = Title::newFromRow( $s );
++					// <IntraACL>
++					if ( $t && !$t->userCan( 'read' ) ) {
++						continue;
++					}
++					// </IntraACL>
+ 					if ( $t ) {
+ 						$out .= '<li' .
+ 							( $s->page_is_redirect ? ' class="allpagesredirect"' : '' ) .
+Only in html/includes/specials: SpecialAllPages.php.orig
+Only in html/includes/specials: SpecialAllPages.php.rej
+Only in html/includes/specials: SpecialAncientpages.php.orig
+Only in html/includes/specials: SpecialAncientpages.php.rej
+Only in html/includes/specials: SpecialBrokenRedirects.php.orig
+Only in html/includes/specials: SpecialBrokenRedirects.php.rej
+Only in html/includes/specials: SpecialCategories.php.orig
+Only in html/includes/specials: SpecialCategories.php.rej
+Only in html/includes/specials: SpecialDeadendpages.php.orig
+Only in html/includes/specials: SpecialDeadendpages.php.rej
+diff -r -u tmp/includes/specials/SpecialDoubleRedirects.php html/includes/specials/SpecialDoubleRedirects.php
+--- tmp/includes/specials/SpecialDoubleRedirects.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/specials/SpecialDoubleRedirects.php	2016-09-15 13:23:21.000000000 +0300
+@@ -96,6 +96,10 @@
+ 			$retval['conds']['pa.page_title'] = $title;
+ 		}
+ 
++		// <IntraACL>
++		wfRunHooks( 'FilterPageQuery', array( &$retval, 'pa', NULL, NULL ) );
++		// </IntraACL>
++
+ 		return $retval;
+ 	}
+ 
+Only in html/includes/specials: SpecialDoubleRedirects.php.rej
+diff -r -u tmp/includes/specials/SpecialEditTags.php html/includes/specials/SpecialEditTags.php
+--- tmp/includes/specials/SpecialEditTags.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/specials/SpecialEditTags.php	2016-09-15 13:23:53.000000000 +0300
+@@ -98,6 +98,11 @@
+ 
+ 		$this->typeName = $request->getVal( 'type' );
+ 		$this->targetObj = Title::newFromText( $request->getText( 'target' ) );
++		// <IntraACL>
++		if ( !$this->targetObj->userCan( 'read' ) ) {
++			throw new ErrorPageError( 'permission-denied', 'permission-denied' );
++		}
++		// </IntraACL>
+ 
+ 		// sanity check of parameter
+ 		switch ( $this->typeName ) {
+Only in html/includes/specials: SpecialEditTags.php.orig
+Only in html/includes/specials: SpecialFewestrevisions.php.orig
+Only in html/includes/specials: SpecialFewestrevisions.php.rej
+diff -r -u tmp/includes/specials/SpecialListfiles.php html/includes/specials/SpecialListfiles.php
+--- tmp/includes/specials/SpecialListfiles.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/specials/SpecialListfiles.php	2016-09-15 18:51:45.000000000 +0300
+@@ -59,6 +59,18 @@
+ 		}
+ 	}
+ 
++	function formatRow( $row ) {
++		// <IntraACL>
++		if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++			$filePage = Title::makeTitleSafe( NS_FILE, $row->img_name );
++			if ( $filePage && !$filePage->userCan('read') ) {
++				return '';
++			}
++		}
++		// </IntraACL>
++		return parent::formatRow( $row );
++	}
++
+ 	/**
+ 	 * Return an array of subpages beginning with $search that this special page will accept.
+ 	 *
+Only in html/includes/specials: SpecialListfiles.php.orig
+Only in html/includes/specials: SpecialListfiles.php.rej
+diff -r -u tmp/includes/specials/SpecialListredirects.php html/includes/specials/SpecialListredirects.php
+--- tmp/includes/specials/SpecialListredirects.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/specials/SpecialListredirects.php	2016-09-15 13:23:21.000000000 +0300
+@@ -123,6 +123,11 @@
+ 		# Find out where the redirect leads
+ 		$target = $this->getRedirectTarget( $result );
+ 		if ( $target ) {
++			// <IntraACL>
++			if ( !$target->userCan( 'read' ) ) {
++				return '';
++			}
++			// </IntraACL>
+ 			# Make a link to the destination page
+ 			$lang = $this->getLanguage();
+ 			$arr = $lang->getArrow() . $lang->getDirMark();
+Only in html/includes/specials: SpecialListredirects.php.orig
+Only in html/includes/specials: SpecialListredirects.php.rej
+Only in html/includes/specials: SpecialLonelypages.php.orig
+Only in html/includes/specials: SpecialLonelypages.php.rej
+Only in html/includes/specials: SpecialMostcategories.php.orig
+Only in html/includes/specials: SpecialMostcategories.php.rej
+Only in html/includes/specials: SpecialMostimages.php.orig
+Only in html/includes/specials: SpecialMostimages.php.rej
+diff -r -u tmp/includes/specials/SpecialMostinterwikis.php html/includes/specials/SpecialMostinterwikis.php
+--- tmp/includes/specials/SpecialMostinterwikis.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/specials/SpecialMostinterwikis.php	2016-09-15 13:23:21.000000000 +0300
+@@ -98,7 +98,9 @@
+ 	 */
+ 	function formatResult( $skin, $result ) {
+ 		$title = Title::makeTitleSafe( $result->namespace, $result->title );
+-		if ( !$title ) {
++		// <IntraACL>
++		if ( !$title || !$title->userCan( 'read' ) ) {
++		// </IntraACL>
+ 			return Html::element(
+ 				'span',
+ 				[ 'class' => 'mw-invalidtitle' ],
+Only in html/includes/specials: SpecialMostinterwikis.php.orig
+Only in html/includes/specials: SpecialMostinterwikis.php.rej
+Only in html/includes/specials: SpecialMostlinkedcategories.php.orig
+Only in html/includes/specials: SpecialMostlinkedcategories.php.rej
+Only in html/includes/specials: SpecialMostlinked.php.orig
+Only in html/includes/specials: SpecialMostlinked.php.rej
+diff -r -u tmp/includes/specials/SpecialMostlinkedtemplates.php html/includes/specials/SpecialMostlinkedtemplates.php
+--- tmp/includes/specials/SpecialMostlinkedtemplates.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/specials/SpecialMostlinkedtemplates.php	2016-09-15 13:23:21.000000000 +0300
+@@ -117,6 +117,10 @@
+ 			Linker::link( $title ),
+ 			$this->makeWlhLink( $title, $result )
+ 		);
++		// <IntraACL>
++		wfRunHooks( 'FilterPageQuery', array( &$query, 'page', array( 'page_title=tl_title', 'page_namespace=tl_namespace' ), NULL ) );
++		// </IntraACL>
++		return $query;
+ 	}
+ 
+ 	/**
+Only in html/includes/specials: SpecialMostlinkedtemplates.php.orig
+Only in html/includes/specials: SpecialMostlinkedtemplates.php.rej
+Only in html/includes/specials: SpecialNewimages.php.orig
+Only in html/includes/specials: SpecialNewimages.php.rej
+Only in html/includes/specials: SpecialNewpages.php.orig
+Only in html/includes/specials: SpecialNewpages.php.rej
+diff -r -u tmp/includes/specials/SpecialPageLanguage.php html/includes/specials/SpecialPageLanguage.php
+--- tmp/includes/specials/SpecialPageLanguage.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/specials/SpecialPageLanguage.php	2016-09-15 13:23:21.000000000 +0300
+@@ -117,9 +117,11 @@
+ 		$title = Title::newFromText( $data['pagename'] );
+ 
+ 		// Check if title is valid
+-		if ( !$title ) {
++		// <IntraACL>
++		if ( !$title || !$title->userCan( 'edit' ) ) {
+ 			return false;
+ 		}
++		// </IntraACL>
+ 
+ 		// Get the default language for the wiki
+ 		$defLang = $this->getConfig()->get( 'LanguageCode' );
+Only in html/includes/specials: SpecialPageLanguage.php.orig
+Only in html/includes/specials: SpecialPageLanguage.php.rej
+Only in html/includes/specials: SpecialPagesWithProp.php.orig
+Only in html/includes/specials: SpecialPagesWithProp.php.rej
+diff -r -u tmp/includes/specials/SpecialPopularpages.php html/includes/specials/SpecialPopularpages.php
+--- tmp/includes/specials/SpecialPopularpages.php	2016-03-06 07:18:50.000000000 +0200
++++ html/includes/specials/SpecialPopularpages.php	2016-09-15 13:23:21.000000000 +0300
+@@ -41,7 +41,7 @@
+ 	}
+ 
+ 	function getQueryInfo() {
+-		return array(
++		$query = array(
+ 			'tables' => array( 'page' ),
+ 			'fields' => array(
+ 				'namespace' => 'page_namespace',
+@@ -52,6 +52,10 @@
+ 				'page_namespace' => MWNamespace::getContentNamespaces()
+ 			)
+ 		);
++		// <IntraACL>
++		wfRunHooks( 'FilterPageQuery', array( &$query, 'page', NULL, NULL ) );
++		// </IntraACL>
++		return $query;
+ 	}
+ 
+ 	/**
+diff -r -u tmp/includes/specials/SpecialPrefixindex.php html/includes/specials/SpecialPrefixindex.php
+--- tmp/includes/specials/SpecialPrefixindex.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/specials/SpecialPrefixindex.php	2016-09-15 13:23:21.000000000 +0300
+@@ -211,6 +211,11 @@
+ 				while ( ( $n < $this->maxPerPage ) && ( $s = $res->fetchObject() ) ) {
+ 					$t = Title::makeTitle( $s->page_namespace, $s->page_title );
+ 					if ( $t ) {
++						// <IntraACL>
++						if ( !$t->userCan( 'read' ) ) {
++							continue;
++						}
++						// </IntraACL>
+ 						$displayed = $t->getText();
+ 						// Try not to generate unclickable links
+ 						if ( $this->stripPrefix && $prefixLength !== strlen( $displayed ) ) {
+Only in html/includes/specials: SpecialPrefixindex.php.orig
+Only in html/includes/specials: SpecialPrefixindex.php.rej
+diff -r -u tmp/includes/specials/SpecialProtectedpages.php html/includes/specials/SpecialProtectedpages.php
+--- tmp/includes/specials/SpecialProtectedpages.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/specials/SpecialProtectedpages.php	2016-09-15 13:23:21.000000000 +0300
+@@ -135,6 +135,10 @@
+ 				]
+ 			)
+ 		);
++		// <IntraACL>
++		wfRunHooks( 'FilterPageQuery', array( &$query, 'page', NULL, NULL ) );
++		// </IntraACL>
++		return $query;
+ 	}
+ 
+ 	/**
+Only in html/includes/specials: SpecialProtectedpages.php.orig
+Only in html/includes/specials: SpecialProtectedpages.php.rej
+diff -r -u tmp/includes/specials/SpecialRandomInCategory.php html/includes/specials/SpecialRandomInCategory.php
+--- tmp/includes/specials/SpecialRandomInCategory.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/specials/SpecialRandomInCategory.php	2016-09-15 13:23:21.000000000 +0300
+@@ -147,6 +147,8 @@
+ 	 * @return Title|null Title object (or null if nothing to choose from)
+ 	 */
+ 	public function getRandomTitle() {
++		$try = 0;
++retry:
+ 		// Convert to float, since we do math with the random number.
+ 		$rand = (float)wfRandom();
+ 		$title = null;
+@@ -179,7 +181,17 @@
+ 		}
+ 
+ 		if ( $row ) {
+-			return Title::makeTitle( $row->page_namespace, $row->page_title );
++			$title = Title::makeTitle( $row->page_namespace, $row->page_title );
++			// <IntraACL>
++			if ( !$title->userCan( 'read' ) ) {
++				if ( $try < 10 ) {
++					$try++;
++					goto retry;
++				}
++				return null;
++			}
++			// </IntraACL>
++			return $title;
+ 		}
+ 
+ 		return null;
+Only in html/includes/specials: SpecialRandomInCategory.php.orig
+Only in html/includes/specials: SpecialRandomInCategory.php.rej
+Only in html/includes/specials: SpecialRandompage.php.orig
+Only in html/includes/specials: SpecialRandompage.php.rej
+Only in html/includes/specials: SpecialRecentchanges.php.orig
+Only in html/includes/specials: SpecialRecentchanges.php.rej
+diff -r -u tmp/includes/specials/SpecialRedirect.php html/includes/specials/SpecialRedirect.php
+--- tmp/includes/specials/SpecialRedirect.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/specials/SpecialRedirect.php	2016-09-15 13:23:21.000000000 +0300
+@@ -78,7 +78,11 @@
+ 			return null;
+ 		}
+ 		$userpage = Title::makeTitle( NS_USER, $username );
+-
++		// <IntraACL>
++		if ( !$userpage->userCan( 'read' ) ) {
++			return null;
++		}
++		// </IntraACL>
+ 		return $userpage->getFullURL( '', false, PROTO_CURRENT );
+ 	}
+ 
+@@ -90,7 +94,9 @@
+ 	function dispatchFile() {
+ 		$title = Title::makeTitleSafe( NS_FILE, $this->mValue );
+ 
+-		if ( !$title instanceof Title ) {
++		// <IntraACL>
++		if ( !$title instanceof Title || $title->getNamespace() != NS_FILE || !$title->userCan( 'read' ) ) {
++		// </IntraACL>
+ 			return null;
+ 		}
+ 		$file = wfFindFile( $title );
+Only in html/includes/specials: SpecialRedirect.php.orig
+Only in html/includes/specials: SpecialRedirect.php.rej
+Only in html/includes/specials: SpecialSearch.php.orig
+Only in html/includes/specials: SpecialSearch.php.rej
+Only in html/includes/specials: SpecialShortpages.php.orig
+Only in html/includes/specials: SpecialShortpages.php.rej
+diff -r -u tmp/includes/specials/SpecialSpecialpages.php html/includes/specials/SpecialSpecialpages.php
+--- tmp/includes/specials/SpecialSpecialpages.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/specials/SpecialSpecialpages.php	2016-09-15 13:23:21.000000000 +0300
+@@ -61,7 +61,9 @@
+ 		$groups = [];
+ 		/** @var SpecialPage $page */
+ 		foreach ( $pages as $page ) {
+-			if ( $page->isListed() ) {
++			// <IntraACL>
++			if ( $page->isListed() && $page->getTitle()->userCan( 'read' ) ) {
++			// </IntraACL>
+ 				$group = $page->getFinalGroupName();
+ 				if ( !isset( $groups[$group] ) ) {
+ 					$groups[$group] = [];
+Only in html/includes/specials: SpecialSpecialpages.php.orig
+Only in html/includes/specials: SpecialSpecialpages.php.rej
+Only in html/includes/specials: SpecialUncategorizedimages.php.orig
+Only in html/includes/specials: SpecialUncategorizedimages.php.rej
+Only in html/includes/specials: SpecialUncategorizedpages.php.orig
+Only in html/includes/specials: SpecialUncategorizedpages.php.rej
+Only in html/includes/specials: SpecialUnusedcategories.php.orig
+Only in html/includes/specials: SpecialUnusedcategories.php.rej
+diff -r -u tmp/includes/specials/SpecialUnusedimages.php html/includes/specials/SpecialUnusedimages.php
+--- tmp/includes/specials/SpecialUnusedimages.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/specials/SpecialUnusedimages.php	2016-09-15 13:23:21.000000000 +0300
+@@ -70,6 +70,10 @@
+ 				'LEFT JOIN', 'il_to = page_title' ];
+ 		}
+ 
++		// <IntraACL>
++		wfRunHooks( 'FilterPageQuery', array( &$retval, 'page', array( 'page_title=img_name' ), NS_FILE ) );
++		// </IntraACL>
++
+ 		return $retval;
+ 	}
+ 
+Only in html/includes/specials: SpecialUnusedimages.php.orig
+Only in html/includes/specials: SpecialUnusedimages.php.rej
+Only in html/includes/specials: SpecialUnusedtemplates.php.orig
+Only in html/includes/specials: SpecialUnusedtemplates.php.rej
+Only in html/includes/specials: SpecialUnwatchedpages.php.orig
+Only in html/includes/specials: SpecialUnwatchedpages.php.rej
+diff -r -u tmp/includes/specials/SpecialUpload.php html/includes/specials/SpecialUpload.php
+--- tmp/includes/specials/SpecialUpload.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/specials/SpecialUpload.php	2016-09-15 13:23:21.000000000 +0300
+@@ -354,6 +354,8 @@
+ 	 *   warnings and it should continue processing
+ 	 */
+ 	protected function showUploadWarning( $warnings ) {
++		wfRunHooks( 'SpecialUploadCheckWarnings', array( $this, &$warnings ) );
++
+ 		# If there are no warnings, or warnings we can ignore, return early.
+ 		# mDestWarningAck is set when some javascript has shown the warning
+ 		# to the user. mForReUpload is set when the user clicks the "upload a
+Only in html/includes/specials: SpecialUpload.php.orig
+Only in html/includes/specials: SpecialUpload.php.rej
+diff -r -u tmp/includes/specials/SpecialUserlogin.php html/includes/specials/SpecialUserlogin.php
+--- tmp/includes/specials/SpecialUserlogin.php	2016-03-06 07:18:54.000000000 +0200
++++ html/includes/specials/SpecialUserlogin.php	2016-09-15 13:23:21.000000000 +0300
+@@ -1132,7 +1132,9 @@
+ 		}
+ 
+ 		$returnToTitle = Title::newFromText( $returnTo );
+-		if ( !$returnToTitle ) {
++		// <IntraACL>
++		if ( !$returnToTitle || !$returnToTitle->userCan( 'read' ) ) {
++		// </IntraACL>
+ 			$returnToTitle = Title::newMainPage();
+ 		}
+ 
+Only in html/includes/specials: SpecialUserlogin.php.orig
+Only in html/includes/specials: SpecialUserlogin.php.rej
+Only in html/includes/specials: SpecialWantedcategories.php.orig
+Only in html/includes/specials: SpecialWantedcategories.php.rej
+Only in html/includes/specials: SpecialWantedfiles.php.orig
+Only in html/includes/specials: SpecialWantedfiles.php.rej
+Only in html/includes/specials: SpecialWantedpages.php.orig
+Only in html/includes/specials: SpecialWantedpages.php.rej
+Only in html/includes/specials: SpecialWantedtemplates.php.orig
+Only in html/includes/specials: SpecialWantedtemplates.php.rej
+Only in html/includes/specials: SpecialWatchlist.php.orig
+Only in html/includes/specials: SpecialWatchlist.php.rej
+diff -r -u tmp/includes/specials/SpecialWhatlinkshere.php html/includes/specials/SpecialWhatlinkshere.php
+--- tmp/includes/specials/SpecialWhatlinkshere.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/specials/SpecialWhatlinkshere.php	2016-09-15 13:23:21.000000000 +0300
+@@ -280,7 +280,11 @@
+ 		$out->addHTML( $this->listStart( $level ) );
+ 		foreach ( $rows as $row ) {
+ 			$nt = Title::makeTitle( $row->page_namespace, $row->page_title );
+-
++			// <IntraACL>
++			if ( !$nt->userCan( 'read' ) ) {
++				continue;
++			}
++			// </IntraACL>
+ 			if ( $row->rd_from && $level < 2 ) {
+ 				$out->addHTML( $this->listItem( $row, $nt, $target, true ) );
+ 				$this->showIndirectLinks(
+Only in html/includes/specials: SpecialWhatlinkshere.php.orig
+Only in html/includes/specials: SpecialWhatlinkshere.php.rej
+diff -r -u tmp/includes/specials/SpecialWithoutinterwiki.php html/includes/specials/SpecialWithoutinterwiki.php
+--- tmp/includes/specials/SpecialWithoutinterwiki.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/specials/SpecialWithoutinterwiki.php	2016-09-15 13:23:21.000000000 +0300
+@@ -100,7 +100,9 @@
+ 			$dbr = wfGetDB( DB_SLAVE );
+ 			$query['conds'][] = 'page_title ' . $dbr->buildLike( $this->prefix, $dbr->anyString() );
+ 		}
+-
++		// <IntraACL>
++		wfRunHooks( 'FilterPageQuery', array( &$query, 'page', NULL, NULL ) );
++		// </IntraACL>
+ 		return $query;
+ 	}
+ 
+Only in html/includes/specials: SpecialWithoutinterwiki.php.rej
+diff -r -u tmp/includes/Title.php html/includes/Title.php
+--- tmp/includes/Title.php	2016-09-13 16:46:42.000000000 +0300
++++ html/includes/Title.php	2016-09-15 17:19:26.000000000 +0300
+@@ -224,7 +224,9 @@
+ 
+ 		try {
+ 			$t->secureAndSplit();
+-			return $t;
++			// <IntraACL>
++			return $t->checkAccessControl();
++			// </IntraACL>
+ 		} catch ( MalformedTitleException $ex ) {
+ 			return null;
+ 		}
+@@ -333,7 +335,9 @@
+ 		if ( $defaultNamespace == NS_MAIN ) {
+ 			$titleCache->set( $text, $t );
+ 		}
+-		return $t;
++		// <IntraACL>
++		return $t->checkAccessControl();
++		// </IntraACL>
+ 	}
+ 
+ 	/**
+@@ -365,7 +369,9 @@
+ 
+ 		try {
+ 			$t->secureAndSplit();
+-			return $t;
++			// <IntraACL>
++			return $t->checkAccessControl();
++			// </IntraACL>
+ 		} catch ( MalformedTitleException $ex ) {
+ 			return null;
+ 		}
+@@ -531,6 +537,9 @@
+ 		$t->mUrlform = wfUrlencode( $t->mDbkeyform );
+ 		$t->mTextform = strtr( $title, '_', ' ' );
+ 		$t->mContentModel = false; # initialized lazily in getContentModel()
++		// <IntraACL>
++		$t = $t->checkAccessControl();
++		// </IntraACL>
+ 		return $t;
+ 	}
+ 
+@@ -555,7 +564,9 @@
+ 
+ 		try {
+ 			$t->secureAndSplit();
+-			return $t;
++			// <IntraACL>
++			return $t->checkAccessControl();
++			// </IntraACL>
+ 		} catch ( MalformedTitleException $ex ) {
+ 			return null;
+ 		}
+@@ -2205,6 +2216,11 @@
+ 						$errors[] = [ 'cascadeprotected', count( $cascadingSources ), $pages, $action ];
+ 					}
+ 				}
++				// <IntraACL>
++				if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++					haclfRestoreTitlePatch( $hacl );
++				}
++				// </IntraACL>
+ 			}
+ 		}
+ 
+@@ -2364,6 +2380,12 @@
+ 					$whitelisted = true;
+ 				}
+ 			} elseif ( $this->isSpecialPage() ) {
++				// <IntraACL>
++				// Disable title patch here to avoid infinite recursion
++				if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++					$hacl = haclfDisableTitlePatch();
++				}
++				// </IntraACL>
+ 				# If it's a special page, ditch the subpage bit and check again
+ 				$name = $this->getDBkey();
+ 				list( $name, /* $subpage */ ) = SpecialPageFactory::resolveAlias( $name );
+@@ -2373,6 +2395,11 @@
+ 						$whitelisted = true;
+ 					}
+ 				}
++				// <IntraACL>
++				if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++					haclfRestoreTitlePatch( $hacl );
++				}
++				// </IntraACL>
+ 			}
+ 		}
+ 
+@@ -2650,12 +2677,23 @@
+ 		# Check regular protection levels
+ 		foreach ( $restrictionTypes as $type ) {
+ 			if ( $action == $type || $action == '' ) {
++				// <IntraACL>
++				// Disable title patch here to avoid infinite recursion
++				if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++					$hacl = haclfDisableTitlePatch();
++				}
++				// </IntraACL>
+ 				$r = $this->getRestrictions( $type );
+ 				foreach ( $wgRestrictionLevels as $level ) {
+ 					if ( in_array( $level, $r ) && $level != '' ) {
+ 						return true;
+ 					}
+ 				}
++				// <IntraACL>
++				if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++					haclfRestoreTitlePatch( $hacl );
++				}
++				// </IntraACL>
+ 			}
+ 		}
+ 
+@@ -4800,4 +4838,67 @@
+ 		$this->mTextform = strtr( $this->mDbkeyform, '_', ' ' );
+ 	}
+ 
++// <IntraACL>
++	/**
++	 * This function checks, if this title is accessible for the action of the
++	 * current request. If the action is unknown it is assumed to be "read".
++	 * If the title is not accessible, the new title "Permission denied" is
++	 * returned. This is a fallback to protect titles if all other security
++	 * patches fail.
++	 *
++	 * While a page is rendered, the same title is often checked several times.
++	 * To speed things up, the results of an accessibility check are internally
++	 * cached.
++	 *
++	 * This function can be disabled in HACL_Initialize.php or LocalSettings.php
++	 * by setting the variable $haclgEnableTitleCheck = false.
++	 *
++	 * @return
++	 * 		$this, if access is granted on this title or
++	 * 		the title for "Permission denied" if not.
++	 */
++	private function checkAccessControl() {
++		if ( !defined( 'HACL_HALOACL_VERSION' ) ) {
++			// IntraACL is disabled or not fully initialized
++			return $this;
++		}
++		global $haclgEnableTitleCheck;
++		if ( isset( $haclgEnableTitleCheck ) && $haclgEnableTitleCheck === false ) {
++			return $this;
++		}
++		static $permissionCache = array();
++
++		$action = 'read';
++		$index = $this->getFullText().'-'.$action;
++		$allowed = @$permissionCache[$index];
++		if ( !isset( $allowed ) ) {
++			switch ( $action ) {
++				case 'create':
++				case 'move':
++				case 'delete':
++					$allowed = $this->userCan( $action );
++					break;
++				case 'edit':
++					// If the article does not exist and edit right was requested,
++					// check for create right.
++					$allowed = $this->userCan( $this->exists() ? 'edit' : 'create' );
++					break;
++				default:
++					// If the user has no read access to a non-existing page,
++					// but has the right to create it - allow him to "read" it
++					$allowed = $this->userCan( 'read' ) || !$this->exists() && $this->userCan( 'create' );
++			}
++			$permissionCache[$index] = $allowed;
++		}
++		if ( $allowed === false ) {
++			global $haclgContLang;
++			$etc = $haclgEnableTitleCheck;
++			$haclgEnableTitleCheck = false;
++			$t = Title::newFromURL( $haclgContLang->getPermissionDeniedPage() );
++			$haclgEnableTitleCheck = $etc;
++			return $t;
++		}
++		return $this;
++	}
++// </IntraACL>
+ }
+Only in html/includes: Title.php.orig
+Only in html/includes: Title.php.rej
+diff -r -u tmp/includes/User.php html/includes/User.php
+--- tmp/includes/User.php	2016-03-06 07:17:29.000000000 +0200
++++ html/includes/User.php	2016-09-15 13:23:51.000000000 +0300
+@@ -285,7 +285,13 @@
+ 				$this->loadDefaults();
+ 				break;
+ 			case 'name':
++				if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++					$hacl = haclfDisableTitlePatch();
++				}
+ 				$this->mId = self::idFromName( $this->mName );
++				if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++					haclfRestoreTitlePatch( $hacl );
++				}
+ 				if ( !$this->mId ) {
+ 					// Nonexistent user placeholder object
+ 					$this->loadDefaults( $this->mName );
+@@ -574,6 +580,24 @@
+ 	public static function isValidUserName( $name ) {
+ 		global $wgContLang, $wgMaxNameChars;
+ 
++		# Disable IntraACL title check as the main and/or
++		# user namespaces may be protected
++		if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++			$hacl = haclfDisableTitlePatch();
++		}
++
++		# Disable IntraACL title check as the main and/or
++		# user namespaces may be protected
++		if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++			$hacl = haclfDisableTitlePatch();
++		}
++
++		# Disable IntraACL title check as the main and/or
++		# user namespaces may be protected
++		if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++			$hacl = haclfDisableTitlePatch();
++		}
++
+ 		if ( $name == ''
+ 		|| User::isIP( $name )
+ 		|| strpos( $name, '/' ) !== false
+@@ -581,6 +605,9 @@
+ 		|| $name != $wgContLang->ucfirst( $name ) ) {
+ 			wfDebugLog( 'username', __METHOD__ .
+ 				": '$name' invalid due to empty, IP, slash, length, or lowercase" );
++			if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++				haclfRestoreTitlePatch( $hacl );
++			}
+ 			return false;
+ 		}
+ 
+@@ -592,6 +619,9 @@
+ 			|| strcmp( $name, $parsed->getPrefixedText() ) ) {
+ 			wfDebugLog( 'username', __METHOD__ .
+ 				": '$name' invalid due to ambiguous prefixes" );
++			if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++				haclfRestoreTitlePatch( $hacl );
++			}
+ 			return false;
+ 		}
+ 
+@@ -608,9 +638,14 @@
+ 		if ( preg_match( $unicodeBlacklist, $name ) ) {
+ 			wfDebugLog( 'username', __METHOD__ .
+ 				": '$name' invalid due to blacklisted characters" );
++			if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++				haclfRestoreTitlePatch( $hacl );
++			}
+ 			return false;
+ 		}
+-
++		if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++			haclfRestoreTitlePatch( $hacl );
++		}
+ 		return true;
+ 	}
+ 
+@@ -886,6 +921,14 @@
+ 	 * @return bool|string
+ 	 */
+ 	public static function getCanonicalName( $name, $validate = 'valid' ) {
++		// <IntraACL>
++		# Disable IntraACL title check as the main and/or
++		# user namespaces may be protected
++		if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++			$hacl = haclfDisableTitlePatch();
++		}
++		// </IntraACL>
++
+ 		// Force usernames to capital
+ 		global $wgContLang;
+ 		$name = $wgContLang->ucfirst( $name );
+@@ -894,6 +937,11 @@
+ 		# with title normalisation, but then it's too late to
+ 		# check elsewhere
+ 		if ( strpos( $name, '#' ) !== false ) {
++			// <IntraACL>
++			if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++				haclfRestoreTitlePatch( $hacl );
++			}
++			// </IntraACL>
+ 			return false;
+ 		}
+ 
+@@ -902,6 +950,11 @@
+ 			Title::newFromText( $name ) : Title::makeTitle( NS_USER, $name );
+ 		// Check for invalid titles
+ 		if ( is_null( $t ) ) {
++			// <IntraACL>
++			if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++				haclfRestoreTitlePatch( $hacl );
++			}
++			// </IntraACL>
+ 			return false;
+ 		}
+ 
+@@ -930,6 +983,15 @@
+ 			default:
+ 				throw new MWException( 'Invalid parameter value for $validate in ' . __METHOD__ );
+ 		}
++		if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++			haclfRestoreTitlePatch( $hacl );
++		}
++		if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++			haclfRestoreTitlePatch( $hacl );
++		}
++		if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++			haclfRestoreTitlePatch( $hacl );
++		}
+ 		return $name;
+ 	}
+ 
+@@ -3941,8 +4003,18 @@
+ 	 * @return string Formatted URL
+ 	 */
+ 	protected function getTokenUrl( $page, $token ) {
++		// <IntraACL>
++		if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++			$hacl = haclfDisableTitlePatch();
++		}
++		// </IntraACL>
+ 		// Hack to bypass localization of 'Special:'
+ 		$title = Title::makeTitle( NS_MAIN, "Special:$page/$token" );
++		// <IntraACL>
++		if ( defined( 'HACL_HALOACL_VERSION' ) ) {
++			haclfRestoreTitlePatch($hacl);
++		}
++		// </IntraACL>
+ 		return $title->getCanonicalURL();
+ 	}
+ 
+Only in html/includes: User.php.orig
+Only in html/includes: User.php.rej
